@@ -43,15 +43,6 @@
     <!-- PERFORMANCE: Asynchronously load the full stylesheet without blocking rendering -->
     <link rel="preload" href="/assets/css/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="/assets/css/styles.css"></noscript>
-
-    <!-- FIXED: Use an importmap to make DOMPurify available to our JS modules -->
-    <script type="importmap">
-    {
-      "imports": {
-        "dompurify": "https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"
-      }
-    }
-    </script>
 </head>
 <body>
     <div id="mobile-top-banner-ad-rotator"><a href="#link1" target="_blank" class="banner-link-wrapper active" aria-label="Audit and Assurance Consulting"><div class="banner banner-1"><div class="text"><h2 class="blinking-text">AUDIT AND ASSURANCE</h2></div><div class="logo-container"><div class="logo-icon"><div class="bar bar1"></div> <div class="bar bar2"></div> <div class="bar bar3"></div></div><div class="logo-text blinking-text">Financial<br>Consulting</div></div></div></a><a href="#link2" target="_blank" class="banner-link-wrapper" aria-label="Join with us for your dream"><div class="banner banner-2"><div class="text"><h2 class="blinking-text">Join For Your Dream</h2></div><div class="cta-button"><span class="blinking-text">More Info</span> <span class="arrow">&gt;</span></div></div></a><a href="#link3" target="_blank" class="banner-link-wrapper" aria-label="Meet our team now"><div class="banner banner-3"><div class="overlay"><h2 class="blinking-text">MEET OUR TEAM NOW</h2><p class="blinking-text">To grow your business</p></div></div></a><a href="#link4" target="_blank" class="banner-link-wrapper" aria-label="Why not start now"><div class="banner banner-4"><div class="overlay"><h2 class="blinking-text">WHY NOT START NOW</h2></div></div></a><a href="#link5" target="_blank" class="banner-link-wrapper" aria-label="Eat healthy, order now"><div class="banner banner-5"><div class="content"><div class="leaf-icon"><svg viewBox="0 0 24 24"><path d="M17,8C8,10,5.9,16.17,3.82,21.34L5.71,22L6.66,19.7C7.14,19.87,7.64,20,8,20C19,20,22,3,22,3C21,5,19,7,17,8Z" /></svg></div><div class="text-container"><h2 class="blinking-text">Eat healthy.</h2></div></div></div></a><a href="#link6" target="_blank" class="banner-link-wrapper" aria-label="Grow your business with Ginyard International Co."><div class="banner banner-6"><h2 class="blinking-text">GROW YOUR BUSINESS</h2><div class="logo blinking-text">Ginyard International</div></div></a></div>
@@ -86,6 +77,10 @@
     <footer class="main-footer"><div class="container"><p class="footer-copyright">&copy; <span id="copyright-year"></span> ToolHub Free</p><nav class="footer-links-bottom"></nav></div></footer>
     <audio id="alarm-sound" src="https://cdn.jsdelivr.net/npm/ion-sound@3.0.7/sounds/bell_ring.mp3" preload="auto"></audio>
     
+    <!-- FIXED: Reverted to a standard, reliable script tag for DOMPurify -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js" defer></script>
+    
+    <!-- FIXED: Kept as a module for dynamic imports, but no longer imports DOMPurify directly -->
     <script type="module" src="/app.js" defer></script>
 </body>
 </html>
