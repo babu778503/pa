@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<!-- Category: Health -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Allergy-Free Recipe Converter</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --light-text: #666;
+            --border-color: #e0e7e4;
+            --primary-color: #34a853; /* Green */
+            --secondary-color: #4285f4; /* Blue */
+            --warning-color: #fbbc05; /* Yellow */
+            --shadow-color: rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        header { text-align: center; margin-bottom: 25px; }
+        h1 { color: var(--primary-color); margin-bottom: 5px; }
+        header p { color: var(--light-text); font-size: 1.1em; max-width: 700px; margin: 0 auto; }
+
+        /* --- Allergy Profile --- */
+        .profile-section {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px var(--shadow-color);
+            margin-bottom: 25px;
+        }
+        .profile-section h2 { margin-top: 0; font-size: 1.2em; }
+        .allergy-selection { display: flex; flex-wrap: wrap; gap: 15px; }
+        .allergy-checkbox { display: flex; align-items: center; }
+        .allergy-checkbox input { margin-right: 8px; width: 1.2em; height: 1.2em; }
+
+        /* --- Main Content Layout --- */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        .input-section, .results-section {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px var(--shadow-color);
+        }
+        .input-section h2, .results-section h2 { margin-top: 0; }
+
+        #recipe-input {
+            width: 100%;
+            height: 300px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1em;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        #analyze-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-top: 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #analyze-btn:hover { background-color: #2e8b45; }
+
+        /* --- Results Area --- */
+        #results-list { list-style: none; padding: 0; margin: 0; }
+        .result-item {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        .result-item.safe { background-color: #e8f5e9; }
+        .result-item.flagged { background-color: #fff8e1; border-left: 4px solid var(--warning-color); }
+        .original-ingredient { font-weight: 500; }
+        .allergen-tag {
+            display: inline-block;
+            background-color: var(--warning-color);
+            color: var(--text-color);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .substitutions { margin: 10px 0 0 20px; padding: 0; list-style: '🌱 '; }
+        .substitutions li { margin-bottom: 5px; color: var(--light-text); }
+        .substitutions li strong { color: var(--text-color); }
+
+        #empty-results { color: var(--light-text); text-align: center; padding: 40px 0; }
+        
+        /* --- Custom Subs Section --- */
+        .custom-subs-section {
+            margin-top: 25px; padding: 25px;
+            background: var(--card-bg); border-radius: 12px;
+        }
+        #custom-subs-list { list-style: none; padding: 0; }
+        #custom-subs-list li { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid var(--border-color); }
+        .delete-sub-btn { cursor: pointer; color: #e74c3c; }
+
+        /* --- Modal --- */
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+            width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);
+            align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background-color: #fefefe; padding: 30px; border-radius: 12px;
+            width: 90%; max-width: 450px;
+        }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+        .modal-btn { padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; }
+        #save-sub-btn { background: var(--primary-color); color: white; }
+
+        /* --- Responsive --- */
+        @media (max-width: 900px) {
+            .main-content { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Allergy-Free Recipe Converter</h1>
+            <p>Paste your recipe ingredients below, select your allergies, and get instant substitution suggestions.</p>
+        </header>
+
+        <section class="profile-section">
+            <h2>Your Allergy Profile</h2>
+            <div id="allergy-selection-container" class="allergy-selection">
+                <!-- Checkboxes will be dynamically inserted here -->
+            </div>
+        </section>
+
+        <div class="main-content">
+            <section class="input-section">
+                <h2>1. Paste Your Recipe Ingredients</h2>
+                <textarea id="recipe-input" placeholder="e.g.,&#10;1 cup all-purpose flour&#10;1/2 cup sugar&#10;1 tsp baking powder&#10;1 egg&#10;1/2 cup milk&#10;1/4 cup butter, melted"></textarea>
+                <button id="analyze-btn">Analyze Recipe</button>
+            </section>
+            
+            <section class="results-section">
+                <h2>2. Converted Recipe</h2>
+                <ul id="results-list">
+                    <div id="empty-results">Your allergy-friendly recipe will appear here.</div>
+                </ul>
+            </section>
+        </div>
+        
+        <section class="custom-subs-section">
+            <h2>My Custom Substitutions <button id="add-sub-btn" style="font-size: 0.8em; margin-left: 10px;">+ Add New</button></h2>
+            <ul id="custom-subs-list"></ul>
+        </section>
+    </div>
+    
+    <!-- Custom Substitution Modal -->
+    <div id="sub-modal" class="modal">
+        <div class="modal-content">
+            <h2>Add Custom Substitution</h2>
+            <form id="sub-form">
+                <div class="form-group">
+                    <label for="modal-allergen">Allergen to Replace</label>
+                    <select id="modal-allergen"></select>
+                </div>
+                <div class="form-group">
+                    <label for="modal-sub-name">Substitution Name & Amount</label>
+                    <input type="text" id="modal-sub-name" placeholder="e.g., 1 cup unsweetened applesauce" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="cancel-sub-btn" class="modal-btn">Cancel</button>
+                    <button type="submit" id="save-sub-btn" class="modal-btn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- DATA ---
+    const SUBSTITUTIONS = {
+        gluten: {
+            name: 'Gluten',
+            keywords: ['flour', 'bread', 'pasta', 'wheat', 'barley', 'rye', 'semolina', 'panko', 'soy sauce', 'teriyaki'],
+            subs: [
+                "<strong>For All-Purpose Flour:</strong> Use a 1:1 gluten-free all-purpose flour blend.",
+                "<strong>For Breadcrumbs:</strong> Use gluten-free breadcrumbs, crushed rice cereal, or almond flour.",
+                "<strong>For Soy Sauce:</strong> Use tamari or coconut aminos."
+            ]
+        },
+        dairy: {
+            name: 'Dairy',
+            keywords: ['milk', 'butter', 'cheese', 'yogurt', 'cream', 'ghee', 'whey', 'casein'],
+            subs: [
+                "<strong>For Milk:</strong> Use an equal amount of almond, soy, oat, or coconut milk.",
+                "<strong>For Butter:</strong> Use an equal amount of dairy-free butter spread, coconut oil, or applesauce in baking.",
+                "<strong>For Cheese:</strong> Use a dairy-free cheese alternative (e.g., from cashews or soy).",
+                "<strong>For Yogurt:</strong> Use a coconut, almond, or soy-based yogurt."
+            ]
+        },
+        eggs: {
+            name: 'Eggs',
+            keywords: ['egg', 'mayonnaise'],
+            subs: [
+                "<strong>For one egg (binding):</strong> Use 1/4 cup unsweetened applesauce, 1 tbsp ground flaxseed + 3 tbsp water (let sit for 5 mins), or 1/4 cup mashed banana.",
+                "<strong>For one egg (leavening):</strong> Use 1 tsp baking soda + 1 tbsp vinegar.",
+                "<strong>For Mayonnaise:</strong> Use a vegan mayo alternative."
+            ]
+        },
+        nuts: {
+            name: 'Tree Nuts',
+            keywords: ['almond', 'walnut', 'pecan', 'cashew', 'pistachio', 'nut flour', 'nut butter', 'pesto'],
+            subs: [
+                "<strong>For Nuts:</strong> Use toasted seeds (sunflower, pumpkin), roasted chickpeas, or oats.",
+                "<strong>For Nut Flour:</strong> Use oat flour or a seed-based flour.",
+                "<strong>For Nut Butter:</strong> Use sunflower seed butter or tahini.",
+                "<strong>For Pesto:</strong> Make pesto with sunflower seeds or omit nuts."
+            ]
+        },
+        peanuts: {
+            name: 'Peanuts',
+            keywords: ['peanut'],
+            subs: [
+                "<strong>For Peanuts:</strong> Use roasted soybeans or seeds.",
+                "<strong>For Peanut Butter:</strong> Use sunflower seed butter or soy nut butter."
+            ]
+        },
+        soy: {
+            name: 'Soy',
+            keywords: ['soy', 'tofu', 'edamame', 'miso', 'tamari'],
+            subs: [
+                "<strong>For Soy Sauce/Tamari:</strong> Use coconut aminos.",
+                "<strong>For Tofu:</strong> Use chickpea-based 'tofu' or other plant-based proteins.",
+                "<strong>For Soy Milk:</strong> Use oat, almond, or rice milk."
+            ]
+        }
+    };
+    
+    let userAllergies = new Set();
+    let customSubs = {};
+
+    // --- DOM Elements ---
+    const allergyContainer = document.getElementById('allergy-selection-container');
+    const recipeInput = document.getElementById('recipe-input');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const resultsList = document.getElementById('results-list');
+    const emptyResults = document.getElementById('empty-results');
+    
+    const addSubBtn = document.getElementById('add-sub-btn');
+    const customSubsList = document.getElementById('custom-subs-list');
+    const modal = document.getElementById('sub-modal');
+    const modalAllergenSelect = document.getElementById('modal-allergen');
+    const subForm = document.getElementById('sub-form');
+    const cancelSubBtn = document.getElementById('cancel-sub-btn');
+
+    // --- Functions ---
+    function loadData() {
+        const savedAllergies = JSON.parse(localStorage.getItem('userAllergies_v1')) || [];
+        userAllergies = new Set(savedAllergies);
+        
+        customSubs = JSON.parse(localStorage.getItem('customSubs_v1')) || {};
+        
+        recipeInput.value = localStorage.getItem('lastRecipe_v1') || '';
+        
+        updateAllergyCheckboxes();
+        renderCustomSubs();
+    }
+
+    function saveData() {
+        localStorage.setItem('userAllergies_v1', JSON.stringify(Array.from(userAllergies)));
+        localStorage.setItem('customSubs_v1', JSON.stringify(customSubs));
+        localStorage.setItem('lastRecipe_v1', recipeInput.value);
+    }
+    
+    function setupAllergySelection() {
+        allergyContainer.innerHTML = '';
+        modalAllergenSelect.innerHTML = '';
+        Object.keys(SUBSTITUTIONS).forEach(key => {
+            const data = SUBSTITUTIONS[key];
+            // Setup profile checkboxes
+            const label = document.createElement('label');
+            label.className = 'allergy-checkbox';
+            label.innerHTML = `<input type="checkbox" data-allergen="${key}"> ${data.name}`;
+            allergyContainer.appendChild(label);
+            
+            // Setup modal dropdown
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = data.name;
+            modalAllergenSelect.appendChild(option);
+        });
+    }
+
+    function updateAllergyCheckboxes() {
+        document.querySelectorAll('#allergy-selection-container input').forEach(box => {
+            box.checked = userAllergies.has(box.dataset.allergen);
+        });
+    }
+    
+    function analyzeRecipe() {
+        const ingredients = recipeInput.value.split('\n').filter(line => line.trim() !== '');
+        resultsList.innerHTML = '';
+        
+        if (ingredients.length === 0) {
+            resultsList.appendChild(emptyResults);
+            return;
+        }
+
+        ingredients.forEach(line => {
+            const li = document.createElement('li');
+            li.className = 'result-item safe';
+            li.innerHTML = `<div class="original-ingredient">${line}</div>`;
+            
+            let flagged = false;
+            userAllergies.forEach(allergenKey => {
+                if (flagged) return; // Only flag once per line
+                const allergenData = SUBSTITUTIONS[allergenKey];
+                
+                if (allergenData.keywords.some(kw => line.toLowerCase().includes(kw))) {
+                    flagged = true;
+                    li.classList.remove('safe');
+                    li.classList.add('flagged');
+                    
+                    const tag = document.createElement('span');
+                    tag.className = 'allergen-tag';
+                    tag.textContent = allergenData.name;
+                    li.querySelector('.original-ingredient').appendChild(tag);
+                    
+                    const subList = document.createElement('ul');
+                    subList.className = 'substitutions';
+                    
+                    // Add custom subs first
+                    if (customSubs[allergenKey]) {
+                        customSubs[allergenKey].forEach(sub => {
+                            subList.innerHTML += `<li><strong>Custom:</strong> ${sub}</li>`;
+                        });
+                    }
+                    // Add default subs
+                    allergenData.subs.forEach(sub => {
+                        subList.innerHTML += `<li>${sub}</li>`;
+                    });
+                    
+                    li.appendChild(subList);
+                }
+            });
+            resultsList.appendChild(li);
+        });
+        saveData();
+    }
+    
+    function renderCustomSubs() {
+        customSubsList.innerHTML = '';
+        if (Object.keys(customSubs).length === 0) {
+            customSubsList.innerHTML = '<li>No custom substitutions added yet.</li>';
+            return;
+        }
+        for (const allergen in customSubs) {
+            customSubs[allergen].forEach((sub, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span><strong>${SUBSTITUTIONS[allergen].name}:</strong> ${sub}</span> <span class="delete-sub-btn" data-allergen="${allergen}" data-index="${index}">&times;</span>`;
+                customSubsList.appendChild(li);
+            });
+        }
+    }
+    
+    // --- Event Handlers ---
+    allergyContainer.addEventListener('change', e => {
+        const allergen = e.target.dataset.allergen;
+        if (e.target.checked) {
+            userAllergies.add(allergen);
+        } else {
+            userAllergies.delete(allergen);
+        }
+        saveData();
+        // Re-analyze if there's text
+        if (recipeInput.value.trim()) analyzeRecipe();
+    });
+
+    analyzeBtn.addEventListener('click', analyzeRecipe);
+    
+    // Modal handling
+    addSubBtn.addEventListener('click', () => modal.style.display = 'flex');
+    cancelSubBtn.addEventListener('click', () => modal.style.display = 'none');
+    window.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+
+    subForm.addEventListener('submit', e => {
+        e.preventDefault();
+        const allergen = modalAllergenSelect.value;
+        const subName = document.getElementById('modal-sub-name').value;
+        
+        if (!customSubs[allergen]) {
+            customSubs[allergen] = [];
+        }
+        customSubs[allergen].push(subName);
+        
+        saveData();
+        renderCustomSubs();
+        modal.style.display = 'none';
+    });
+    
+    customSubsList.addEventListener('click', e => {
+        if (e.target.classList.contains('delete-sub-btn')) {
+            const { allergen, index } = e.target.dataset;
+            if (confirm(`Delete this substitution? "${customSubs[allergen][index]}"`)) {
+                customSubs[allergen].splice(index, 1);
+                if (customSubs[allergen].length === 0) {
+                    delete customSubs[allergen];
+                }
+                saveData();
+                renderCustomSubs();
+            }
+        }
+    });
+
+    // --- Initial Load ---
+    setupAllergySelection();
+    loadData();
+    if(recipeInput.value.trim()) analyzeRecipe();
+});
+</script>
+</body>
+</html>

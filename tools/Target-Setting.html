@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<!-- Category: Professional -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Multi-Brand Target Setting Tool</title>
+    <style>
+        /* --- General Styling --- */
+        :root {
+            --primary-color: #005A9C;
+            --secondary-color: #F0F8FF;
+            --border-color: #DDD;
+            --danger-color: #D8000C;
+            --danger-bg: #FFEBEB;
+            --success-color: #28a745;
+            --success-bg: #E6F4EA;
+            --adjusted-color: #E6F4EA;
+            --text-color: #333;
+            --header-bg: #F4F4F4;
+            --status-ok-bg: #D4EDDA;
+            --status-ok-text: #155724;
+            --status-warn-bg: #FFF3CD;
+            --status-warn-text: #856404;
+            --tab-inactive-bg: #E9ECEF;
+            --tab-inactive-text: #495057;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 95%; margin: 0 auto; background-color: #FFF; padding: 25px;
+            border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2 { color: var(--primary-color); text-align: center; }
+        h1 { margin-bottom: 15px; }
+        h2 { margin-top: 10px; font-size: 1.5em; margin-bottom: 25px;}
+
+        /* --- Header & Global Controls --- */
+        .header-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center; /* Centered content now */
+            margin-bottom: 20px;
+        }
+        .title-section {
+            text-align: center;
+        }
+        .global-controls {
+            text-align: center;
+        }
+        #brandLockBtn { width: 150px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        #brandLockBtn.unlocked { background-color: var(--success-bg); color: var(--success-color); border: 1px solid var(--success-color); }
+        #brandLockBtn.unlocked:hover { background-color: var(--success-color); color: white; }
+        #brandLockBtn.locked { background-color: var(--danger-bg); color: var(--danger-color); border: 1px solid var(--danger-color); }
+        #brandLockBtn.locked:hover { background-color: var(--danger-color); color: white; }
+
+        /* --- Tabs --- */
+        .tabs {
+            display: flex; flex-wrap: wrap; list-style: none; padding: 0;
+            margin: 0 0 20px 0; border-bottom: 2px solid var(--primary-color);
+        }
+        .tab-item {
+            padding: 10px 15px; cursor: pointer; background-color: var(--tab-inactive-bg);
+            color: var(--tab-inactive-text); border: 1px solid var(--border-color);
+            border-bottom: none; border-radius: 6px 6px 0 0; margin-right: 5px; margin-bottom: -1px; /* Ensures alignment when wrapping */
+            font-weight: bold; transition: background-color 0.2s, color 0.2s;
+        }
+        .tab-item:hover { background-color: #d1d9e0; }
+        .tab-item.active { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+        #add-brand-btn { background-color: var(--success-color); color: white; }
+        #add-brand-btn:hover { background-color: #218838; }
+        .sheet { display: none; }
+        .sheet.active { display: block; }
+        
+        /* --- Sheet Controls & Status --- */
+        .controls { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between; padding: 20px; background-color: var(--header-bg); border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); }
+        .control-group { display: flex; flex-direction: column; gap: 5px; }
+        .control-group label { font-weight: bold; font-size: 0.9em; color: #555; }
+        .control-group input, .control-group select { padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 1em; min-width: 200px; }
+        .actions { display: flex; gap: 10px; align-items: flex-end; }
+        button { padding: 10px 20px; font-size: 1em; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.2s; }
+        button:disabled { background-color: #e9ecef !important; color: #6c757d !important; cursor: not-allowed; border-color: #ced4da !important; }
+        .btn-recalculate { background-color: var(--primary-color); color: white; }
+        .btn-recalculate:hover { background-color: #004170; }
+        .btn-export, .btn-import { background-color: #6c757d; color: white; }
+        .btn-export:hover, .btn-import:hover { background-color: #5a6268; }
+        .btn-delete { background-color: var(--danger-bg); color: var(--danger-color); border: 1px solid var(--danger-color); }
+        .btn-delete:hover { background-color: var(--danger-color); color: white; }
+        .status-message { padding: 12px 20px; margin-bottom: 25px; border-radius: 5px; text-align: center; font-weight: 500; }
+        
+        /* --- Table Styling --- */
+        .table-wrapper { overflow-x: auto; max-height: 70vh; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; border: 1px solid var(--border-color); text-align: right; white-space: nowrap; }
+        th.text-left, td.text-left { text-align: left; }
+        thead th { background-color: var(--header-bg); font-weight: bold; position: sticky; top: -1px; z-index: 10; }
+        tfoot { font-weight: bold; background-color: var(--header-bg); position: sticky; bottom: -1px; z-index: 10; }
+        .table-input { box-sizing: border-box; width: 100%; padding: 8px; border: 1px solid transparent; background-color: transparent; }
+        .table-input:focus { border: 1px solid var(--primary-color); background-color: #fff; }
+
+        .col-calculated { background-color: #f0f4f8; }
+        .highlight-adjusted .col-target-final { background-color: var(--adjusted-color) !important; font-weight: bold; }
+        .adjustment-icon { cursor: help; margin-left: 5px; font-style: normal; }
+        
+        /* --- Instruction Panel Styling --- */
+        .instructions-container { position: fixed; top: 20px; right: 20px; z-index: 1000; text-align: right; }
+        #instructions-toggle-btn { width: 50px; height: 50px; border-radius: 50%; background-color: var(--primary-color); color: white; font-size: 24px; font-weight: bold; border: 2px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.2); cursor: pointer; }
+        #instructions-box { display: none; width: 350px; padding: 20px; margin-top: 10px; background-color: white; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); text-align: left; }
+        #instructions-box.is-visible { display: block; }
+        
+        /* --- Responsive Adjustments for Mobile --- */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+            }
+            .control-group {
+                width: 100%;
+            }
+            .control-group input, .control-group select {
+                min-width: 0;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .actions {
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            .actions button {
+                width: 100%;
+            }
+            th, td {
+                padding: 10px 8px;
+            }
+            .instructions-container {
+                top: 10px;
+                right: 10px;
+            }
+            #instructions-toggle-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+            }
+            #instructions-box {
+                width: calc(100vw - 40px);
+                max-width: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions-container">
+        <button id="instructions-toggle-btn" title="How to Use This Tool">?</button>
+        <div id="instructions-box">...</div>
+    </div>
+
+    <div class="container">
+        <div class="header-wrapper">
+            <div class="title-section">
+                <h1>Multi-Brand Target Setting Tool</h1>
+                <div class="global-controls">
+                    <button id="brandLockBtn"><span class="icon"></span> <span class="text"></span></button>
+                </div>
+            </div>
+        </div>
+        <ul class="tabs" id="tab-container"></ul>
+        <div id="sheet-container"></div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // --- STATE MANAGEMENT ---
+    let isBrandStructureLocked = false;
+    let brandIdCounter = 2;
+    let brandsData = [
+        { id: 'brand1', name: 'Brand A', totalTarget: 500000, roundingMethod: 'integer' },
+        { id: 'brand2', name: 'Brand B', totalTarget: 750000, roundingMethod: 'nearest100' },
+    ];
+    let employeeData = [
+        { empId: "E1001", name: "Aktaruzzaman", routeName: "Dhaka Central", routeId: "DHK-C1" },
+        { empId: "E1002", name: "Habib U. N. K. Tanmay", routeName: "Dhaka North", routeId: "DHK-N1" },
+        { empId: "E1003", name: "Jawad Ul islam", routeName: "Dhaka Central", routeId: "DHK-C1" },
+    ];
+    
+    // --- DOM REFERENCES ---
+    const tabContainer = document.getElementById('tab-container');
+    const sheetContainer = document.getElementById('sheet-container');
+    const instructionsToggleBtn = document.getElementById('instructions-toggle-btn');
+    const instructionsBox = document.getElementById('instructions-box');
+    const brandLockBtn = document.getElementById('brandLockBtn');
+
+    // --- INITIALIZATION ---
+    function init() {
+        initializeEmployeeData();
+        renderApp();
+        setupEventListeners();
+    }
+    
+    function initializeEmployeeData() {
+        employeeData.forEach(emp => {
+            emp.previousData = emp.previousData || {};
+            emp.finalTargets = emp.finalTargets || {};
+            brandsData.forEach(brand => {
+                emp.previousData[brand.id] = emp.previousData[brand.id] || Math.floor(50000 + Math.random() * 100000);
+                emp.finalTargets[brand.id] = emp.finalTargets[brand.id] || 0;
+            });
+        });
+    }
+
+    function setupEventListeners() {
+        tabContainer.addEventListener('click', handleTabClick);
+        sheetContainer.addEventListener('change', handleSheetInput);
+        sheetContainer.addEventListener('click', handleSheetButtonClick);
+        brandLockBtn.addEventListener('click', toggleBrandLock);
+        instructionsToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); instructionsBox.classList.toggle('is-visible'); });
+        document.addEventListener('click', (e) => { if (!instructionsBox.contains(e.target)) instructionsBox.classList.remove('is-visible'); });
+    }
+    
+    // --- DYNAMIC RENDERING & UI UPDATES ---
+    function renderApp() {
+        const activeTabId = document.querySelector('.tab-item.active')?.dataset.tabId || 'summary';
+        tabContainer.innerHTML = '';
+        sheetContainer.innerHTML = '';
+
+        const staticSheets = [{ id: 'summary' }, { id: 'previousData' }];
+        [...staticSheets, ...brandsData].forEach(sheet => {
+            const sheetDiv = document.createElement('div');
+            sheetDiv.className = 'sheet';
+            sheetDiv.id = `sheet-${sheet.id}`;
+            sheetContainer.appendChild(sheetDiv);
+        });
+        
+        renderTabs();
+        fullRenderAndCalculate();
+        switchTab(activeTabId);
+        updateLockUI();
+        renderInstructions();
+    }
+    
+    function renderTabs() {
+        const staticTabs = [
+            { id: 'summary', name: 'Summary' },
+            { id: 'previousData', name: 'Previous Data Input' }
+        ];
+        const allTabs = [...staticTabs, ...brandsData];
+        tabContainer.innerHTML = allTabs.map(tab => `<li class="tab-item" data-tab-id="${tab.id}">${tab.name}</li>`).join('')
+            + '<li class="tab-item" id="add-brand-btn">+ Add Brand</li>';
+    }
+    
+    function fullRenderAndCalculate() {
+        renderSummarySheet();
+        renderPreviousDataSheet();
+        brandsData.forEach(brand => renderBrandSheet(brand));
+        recalculateAllBrands();
+    }
+    
+    function updateLockUI() {
+        const addBtn = document.getElementById('add-brand-btn');
+        const deleteBtns = document.querySelectorAll('.btn-delete');
+        
+        if (isBrandStructureLocked) {
+            brandLockBtn.className = 'locked';
+            brandLockBtn.querySelector('.icon').textContent = '🔒';
+            brandLockBtn.querySelector('.text').textContent = 'Locked';
+            if (addBtn) addBtn.style.display = 'none'; // Hide instead of disable for cleaner look
+            deleteBtns.forEach(btn => btn.disabled = true);
+        } else {
+            brandLockBtn.className = 'unlocked';
+            brandLockBtn.querySelector('.icon').textContent = '🔓';
+            brandLockBtn.querySelector('.text').textContent = 'Unlocked';
+            if (addBtn) addBtn.style.display = 'list-item';
+            deleteBtns.forEach(btn => btn.disabled = false);
+        }
+    }
+    
+    // --- TAB & ACTION HANDLERS ---
+    function switchTab(tabId) {
+        if (!document.querySelector(`.tab-item[data-tab-id="${tabId}"]`)) {
+            tabId = 'summary';
+        }
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        document.querySelector(`.tab-item[data-tab-id="${tabId}"]`).classList.add('active');
+        document.querySelectorAll('.sheet').forEach(s => s.classList.remove('active'));
+        document.getElementById(`sheet-${tabId}`).classList.add('active');
+    }
+
+    function handleTabClick(e) {
+        if (e.target.id === 'add-brand-btn') {
+            handleAddBrand();
+        } else if (e.target.matches('.tab-item')) {
+            switchTab(e.target.dataset.tabId);
+        }
+    }
+
+    function handleSheetInput(e) {
+        const { empIndex, field, brandId } = e.target.dataset;
+        const brand = brandsData.find(b => b.id === brandId);
+
+        // Handle Brand Name, Total Target, or Rounding Method changes on brand sheets
+        if (field === 'brandName') {
+            if (brand) handleRenameBrand(brand, e.target.value);
+            // handleRenameBrand calls renderApp(), which is a full re-render.
+        } else if (field === 'totalTarget' || field === 'roundingMethod') {
+            if (brand) {
+                brand[field] = e.target.type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value;
+                recalculateBrand(brand);
+            }
+        } else {
+            // Handle Employee data changes from the "Previous Data Input" sheet
+            const employee = employeeData[empIndex];
+            if (employee) {
+                if (field === 'previousData' && brandId) {
+                    employee.previousData[brandId] = parseFloat(e.target.value) || 0;
+                } else if (field) { // Handles name, empId, etc.
+                    employee[field] = e.target.value;
+                }
+                fullRenderAndCalculate();
+            }
+        }
+    }
+
+    function handleSheetButtonClick(e) {
+        if(e.target.matches('.btn-recalculate')) {
+            recalculateBrand(brandsData.find(b => b.id === e.target.dataset.brandId));
+        } else if (e.target.matches('.btn-import')) {
+            importFromCSV();
+        } else if (e.target.matches('.btn-export')) {
+            exportToCSV(e.target.dataset.exportType);
+        } else if (e.target.matches('.btn-delete')) {
+            handleDeleteBrand(e.target.dataset.brandId);
+        }
+    }
+    
+    function toggleBrandLock() {
+        isBrandStructureLocked = !isBrandStructureLocked;
+        updateLockUI();
+    }
+
+    // --- BRAND & DATA MANIPULATION ---
+    function handleAddBrand() {
+        if (isBrandStructureLocked) return;
+        brandIdCounter++;
+        const newBrandId = `brand${brandIdCounter}`;
+        const newBrand = {
+            id: newBrandId, name: `New Brand ${brandIdCounter - 2}`, totalTarget: 100000, roundingMethod: 'integer'
+        };
+        brandsData.push(newBrand);
+        employeeData.forEach(emp => {
+            emp.previousData[newBrandId] = 0;
+            emp.finalTargets[newBrandId] = 0;
+        });
+        renderApp();
+        switchTab(newBrandId);
+    }
+    
+    function handleDeleteBrand(brandId) {
+        if (isBrandStructureLocked) return;
+        const brand = brandsData.find(b => b.id === brandId);
+        if (!brand || !confirm(`Are you sure you want to delete "${brand.name}"? This cannot be undone.`)) return;
+        
+        brandsData = brandsData.filter(b => b.id !== brandId);
+        employeeData.forEach(emp => {
+            delete emp.previousData[brandId];
+            delete emp.finalTargets[brandId];
+        });
+        renderApp();
+    }
+    
+    function handleRenameBrand(brand, newName) {
+        brand.name = newName;
+        renderApp();
+    }
+
+    // --- RENDER FUNCTIONS FOR SHEETS ---
+    function renderSummarySheet() {
+        const sheetDiv = document.getElementById('sheet-summary');
+        if (!sheetDiv) return;
+        const headers = ['Employee Name', 'Employee ID', 'Route Name', 'Route ID', ...brandsData.map(b => b.name), 'Total Final Target'];
+        let tableHTML = `<h2>Aggregated Final Targets</h2><div class="controls"><div class="actions"><button class="btn-export" data-export-type="summary">Export Summary CSV</button></div></div><div class="table-wrapper"><table><thead><tr>${headers.map(h => `<th class="text-left">${h}</th>`).join('')}</tr></thead><tbody>`;
+        employeeData.forEach(emp => {
+            let totalTarget = brandsData.reduce((sum, b) => sum + (emp.finalTargets[b.id] || 0), 0);
+            const brandTargets = brandsData.map(brand => `<td class="text-right">${formatNumber(emp.finalTargets[brand.id], 0)}</td>`).join('');
+            tableHTML += `<tr><td class="text-left">${emp.name}</td><td class="text-left">${emp.empId}</td><td class="text-left">${emp.routeName}</td><td class="text-left">${emp.routeId}</td>${brandTargets}<td class="text-right" style="font-weight:bold;">${formatNumber(totalTarget, 0)}</td></tr>`;
+        });
+        sheetDiv.innerHTML = tableHTML + '</tbody></table></div>';
+    }
+
+    function renderPreviousDataSheet() {
+        const sheetDiv = document.getElementById('sheet-previousData');
+        if (!sheetDiv) return;
+        const brandHeaders = brandsData.map(b => `<th>${b.name}</th>`).join('');
+        let tableHTML = `<h2>Master Previous Data Input</h2><div class="controls"><div class="actions"><button class="btn-import">Import CSV</button><button class="btn-export" data-export-type="previousData">Export Inputs CSV</button></div></div><div class="table-wrapper"><table><thead><tr><th>Employee Name</th><th>Employee ID</th><th>Route Name</th><th>Route ID</th>${brandHeaders}</tr></thead><tbody>`;
+        employeeData.forEach((emp, index) => {
+            const brandInputs = brandsData.map(brand => `<td><input type="number" class="table-input text-right" data-emp-index="${index}" data-field="previousData" data-brand-id="${brand.id}" value="${emp.previousData[brand.id] || 0}"></td>`).join('');
+            tableHTML += `<tr><td><input type="text" class="table-input text-left" data-emp-index="${index}" data-field="name" value="${emp.name}"></td><td><input type="text" class="table-input text-left" data-emp-index="${index}" data-field="empId" value="${emp.empId}"></td><td><input type="text" class="table-input text-left" data-emp-index="${index}" data-field="routeName" value="${emp.routeName}"></td><td><input type="text" class="table-input text-left" data-emp-index="${index}" data-field="routeId" value="${emp.routeId}"></td>${brandInputs}</tr>`;
+        });
+        sheetDiv.innerHTML = tableHTML + '</tbody></table></div>';
+    }
+    
+    function renderBrandSheet(brand) {
+        const sheetDiv = document.getElementById(`sheet-${brand.id}`);
+        if(!sheetDiv) return;
+        const roundingOptions = [{v:'none',t:'No Rounding'},{v:'integer',t:'Nearest Integer'},{v:'up',t:'Round Up'},{v:'down',t:'Round Down'},{v:'nearest10',t:'Nearest 10'},{v:'nearest100',t:'Nearest 100'}];
+        const roundingSelect = roundingOptions.map(o => `<option value="${o.v}" ${brand.roundingMethod === o.v ? 'selected' : ''}>${o.t}</option>`).join('');
+        const deleteButtonDisabled = isBrandStructureLocked ? 'disabled' : '';
+        sheetDiv.innerHTML = `<h2>Target Setting for ${brand.name}</h2>
+            <div class="controls">
+                <div class="control-group"><label>Brand Name</label><input type="text" value="${brand.name}" data-field="brandName" data-brand-id="${brand.id}"></div>
+                <div class="control-group"><label>Total ${brand.name} Target</label><input type="number" value="${brand.totalTarget}" data-field="totalTarget" data-brand-id="${brand.id}"></div>
+                <div class="control-group"><label>Rounding Method</label><select data-field="roundingMethod" data-brand-id="${brand.id}">${roundingSelect}</select></div>
+                <div class="actions"><button class="btn-recalculate" data-brand-id="${brand.id}">Recalculate</button><button class="btn-delete" data-brand-id="${brand.id}" ${deleteButtonDisabled}>Delete Brand</button></div>
+            </div>
+            <div id="status-${brand.id}" class="status-message"></div>
+            <div class="table-wrapper"><table><thead><tr><th class="text-left">Employee Name</th><th class="text-left">Employee ID</th><th class="text-left">Route Name</th><th class="text-left">Route ID</th><th>Previous Data</th><th>Contribution (%)</th><th>Auto-Generated Target</th><th>Final Target (Rounded)</th></tr></thead><tbody id="tbody-${brand.id}"></tbody><tfoot><tr><td colspan="4" class="text-left">Total</td><td id="totalPrev-${brand.id}">0</td><td id="totalCont-${brand.id}">0%</td><td id="totalAuto-${brand.id}">0</td><td id="totalFinal-${brand.id}">0</td></tr></tfoot></table></div>`;
+    }
+    
+    function renderInstructions() {
+        instructionsBox.innerHTML = `<h4>How to Use This Tool</h4><ol>
+            <li>Use the <strong>Brand Lock</strong> button to allow/prevent adding or deleting brands.</li>
+            <li>Go to the <strong>Previous Data Input</strong> tab to set up employees and their data. You can also import a CSV file here.</li>
+            <li>Click <strong>+ Add Brand</strong> to create new calculation sheets.</li>
+            <li>On each <strong>Brand</strong> sheet, set the Name, Total Target, and Rounding Method. Calculations update automatically. Click <strong>Recalculate</strong> to force an update.</li>
+            <li>The <strong>Summary</strong> sheet shows the combined final targets from all brands.</li></ol>
+            <h5>Importing Data</h5><p>On the 'Previous Data Input' tab, click 'Import CSV'. Headers must include 'Employee Name', 'Employee ID', 'Route Name', 'Route ID', followed by brand names.</p>`;
+    }
+
+    // --- CALCULATION LOGIC ---
+    function applyRounding(v, m) { switch(m){case'integer':return Math.round(v);case'up':return Math.ceil(v);case'down':return Math.floor(v);case'nearest10':return Math.round(v/10)*10;case'nearest100':return Math.round(v/100)*100;default:return v;} }
+    function recalculateAllBrands() { brandsData.forEach(b => recalculateBrand(b, false)); renderSummarySheet(); }
+    function recalculateBrand(brand, updateSummary = true) {
+        const temp = []; let totalPrev = 0, totalInitFinal = 0, hiContributor = { i: -1, t: -Infinity };
+        employeeData.forEach(e => { totalPrev += e.previousData[brand.id] || 0; });
+        employeeData.forEach((e, i) => {
+            const p = e.previousData[brand.id] || 0, c = totalPrev > 0 ? (p / totalPrev) * 100 : 0, a = (c / 100) * brand.totalTarget, f = applyRounding(a, brand.roundingMethod);
+            temp.push({c,a,f}); totalInitFinal += f; if(a > hiContributor.t) hiContributor = {i, t:a};
+        });
+        const discrepancy = brand.totalTarget - totalInitFinal;
+        if (discrepancy !== 0 && hiContributor.i !== -1) temp[hiContributor.i].f += discrepancy;
+        
+        const tbody = document.getElementById(`tbody-${brand.id}`); if (!tbody) return;
+        let bodyHTML = '', totalFinal = 0, totalAuto = 0;
+        employeeData.forEach((e, i) => {
+            const calc = temp[i]; e.finalTargets[brand.id] = calc.f; totalFinal += calc.f; totalAuto += calc.a;
+            const isAdj = (i === hiContributor.i && discrepancy !== 0);
+            bodyHTML += `<tr class="${isAdj?'highlight-adjusted':''}"><td class="text-left">${e.name}</td><td class="text-left">${e.empId}</td><td class="text-left">${e.routeName}</td><td class="text-left">${e.routeId}</td><td>${formatNumber(e.previousData[brand.id],0)}</td><td class="col-calculated">${calc.c.toFixed(2)}%</td><td class="col-calculated">${formatNumber(calc.a,2)}</td><td class="col-calculated col-target-final">${formatNumber(calc.f,0)}${isAdj?`<i class="adjustment-icon" title="Auto-adjusted by ${formatNumber(discrepancy,2)}">⚙️</i>`:''}</td></tr>`;
+        });
+        tbody.innerHTML = bodyHTML;
+        
+        document.getElementById(`totalPrev-${brand.id}`).textContent=formatNumber(totalPrev,0);
+        document.getElementById(`totalCont-${brand.id}`).textContent='100.00%';
+        document.getElementById(`totalAuto-${brand.id}`).textContent=formatNumber(totalAuto,0);
+        document.getElementById(`totalFinal-${brand.id}`).textContent=formatNumber(totalFinal,0);
+        const s = document.getElementById(`status-${brand.id}`);
+        s.textContent=discrepancy!==0&&hiContributor.i!==-1?`Mismatch of ${formatNumber(discrepancy,2)}. Adjusted on ${employeeData[hiContributor.i].name}.`:'OK: Totals match.';
+        s.className=`status-message ${discrepancy!==0&&hiContributor.i!==-1?'status-warn':'status-ok'}`;
+        if (updateSummary) renderSummarySheet();
+    }
+
+    // --- UTILITY & IO ---
+    function formatNumber(n,d){return(n||0).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});}
+    function exportToCSV(type) {
+        let h, r;
+        if (type === 'summary') {
+            h = ['Employee Name','ID','Route','Route ID',...brandsData.map(b=>b.name), 'Total Target'];
+            r = employeeData.map(e => [e.name,e.empId,e.routeName,e.routeId,...brandsData.map(b => e.finalTargets[b.id]||0), brandsData.reduce((s,b)=>s+(e.finalTargets[b.id]||0),0)]);
+        } else {
+            h = ['Employee Name','ID','Route','Route ID',...brandsData.map(b=>b.name)];
+            r = employeeData.map(e => [e.name,e.empId,e.routeName,e.routeId,...brandsData.map(b=>e.previousData[b.id]||0)]);
+        }
+        const csv = "data:text/csv;charset=utf-8," + [h,...r].map(e => e.map(v=>typeof v==='string'?`"${v.replace(/"/g,'""')}"`:v).join(",")).join("\n");
+        const link = document.createElement("a"); link.href=encodeURI(csv); link.download=`target_data_${type}.csv`; link.click();
+    }
+    function importFromCSV() {
+        const input = document.createElement('input'); input.type='file'; input.accept='.csv';
+        input.onchange = e => {
+            const reader = new FileReader();
+            reader.onload = res => {
+                const lines = res.target.result.split('\n').filter(l => l.trim()!=='');
+                if (lines.length < 2) { alert('CSV is empty or has only headers.'); return; }
+                const headers = lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,''));
+                const brandHeaders = headers.slice(4);
+                const newBrands = brandHeaders.map((h,i)=>({id:`brand${i+1}`,name:h.replace(/ Previous Data$/,''),totalTarget:100000,roundingMethod:'integer'}));
+                brandIdCounter=newBrands.length;
+                const newEmpData = [];
+                for(let i=1;i<lines.length;i++){
+                    const d=lines[i].split(',').map(v=>v.trim().replace(/^"|"$/g,''));
+                    const emp={name:d[0],empId:d[1],routeName:d[2],routeId:d[3],previousData:{},finalTargets:{}};
+                    newBrands.forEach((b,j)=>{emp.previousData[b.id]=parseFloat(d[4+j])||0;emp.finalTargets[b.id]=0;});
+                    newEmpData.push(emp);
+                }
+                if (newEmpData.length > 0) {
+                    if (confirm(`This will replace all current data with ${newEmpData.length} rows and ${newBrands.length} brands from the file. Are you sure you want to continue?`)) {
+                        brandsData = newBrands;
+                        employeeData = newEmpData;
+                        alert(`${newEmpData.length} rows & ${newBrands.length} brands imported successfully.`);
+                        renderApp();
+                    }
+                } else {
+                    alert('No valid data found in the CSV file.');
+                }
+            };
+            reader.readAsText(e.target.files[0]);
+        };
+        input.click();
+    }
+
+    // --- LETS GO ---
+    init();
+});
+</script>
+</body>
+</html>

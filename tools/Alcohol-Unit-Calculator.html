@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<!-- Category: Health -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alcohol Unit Calculator</title>
+    <style>
+        :root {
+            --bg-color: #f4f5f7;
+            --card-bg: #ffffff;
+            --primary-color: #0077b6;
+            --secondary-color: #00b4d8;
+            --text-color: #333;
+            --light-text-color: #6c757d;
+            --border-color: #e9ecef;
+            --shadow-color: rgba(0, 0, 0, 0.06);
+            --danger-color: #d00000;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            padding: 25px 30px;
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--text-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+        }
+        
+        .form-section label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        #drink-preset { width: 100%; }
+        
+        .custom-entry {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            align-items: end;
+        }
+        
+        .or-divider {
+            text-align: center;
+            font-weight: bold;
+            color: var(--light-text-color);
+            margin: 20px 0;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        #add-drink-btn {
+            background: linear-gradient(45deg, var(--secondary-color), var(--primary-color));
+            color: white;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            margin-top: 10px;
+        }
+        #add-drink-btn:hover { opacity: 0.9; }
+
+        #drink-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .drink-item {
+            background-color: #f8f9fa;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .drink-name { font-weight: 500; }
+        .drink-units { font-weight: bold; color: var(--primary-color); }
+
+        .delete-btn {
+            background-color: transparent;
+            color: var(--danger-color);
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 28px;
+            text-align: center;
+            transition: background-color 0.2s;
+        }
+        .delete-btn:hover { background-color: #fee2e2; }
+        
+        .summary { text-align: center; }
+        .total-units-display { font-size: 3em; font-weight: 700; color: var(--primary-color); }
+        .total-drinks-display, .guideline-info { color: var(--light-text-color); }
+        .guideline-info { margin-top: 10px; }
+        
+        #clear-btn {
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: block;
+            margin: 20px auto 0 auto;
+        }
+        #clear-btn:hover { background-color: #b20000; }
+        #initial-message { text-align: center; color: var(--light-text-color); padding: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Alcohol Unit Calculator</h1>
+
+        <div class="card">
+            <h2>Add a Drink</h2>
+            <div class="form-section">
+                <label for="drink-preset">Quick Add (Common Drinks)</label>
+                <!-- value format: Name|Volume(ml)|ABV(%) -->
+                <select id="drink-preset">
+                    <option value="none" selected>-- Select a Preset --</option>
+                    <option value="Pint of Beer (4%)|568|4">Pint of Beer (4%)</option>
+                    <option value="Pint of Beer (5%)|568|5">Pint of Beer (5%)</option>
+                    <option value="Bottle of Beer (330ml, 5%)|330|5">Bottle of Beer (330ml, 5%)</option>
+                    <option value="Small Glass of Wine (175ml, 13%)|175|13">Small Glass of Wine (175ml, 13%)</option>
+                    <option value="Large Glass of Wine (250ml, 13%)|250|13">Large Glass of Wine (250ml, 13%)</option>
+                    <option value="Bottle of Wine (750ml, 13%)|750|13">Bottle of Wine (750ml, 13%)</option>
+                    <option value="Single Shot of Spirit (25ml, 40%)|25|40">Single Shot of Spirit (25ml, 40%)</option>
+                    <option value="Double Shot of Spirit (50ml, 40%)|50|40">Double Shot of Spirit (50ml, 40%)</option>
+                    <option value="Can of Cider (440ml, 5.5%)|440|5.5">Can of Cider (440ml, 5.5%)</option>
+                </select>
+            </div>
+            
+            <div class="or-divider">OR</div>
+
+            <div class="form-section custom-entry">
+                <div class="form-control">
+                    <label for="custom-volume">Volume (ml)</label>
+                    <input type="number" id="custom-volume" placeholder="e.g., 568">
+                </div>
+                <div class="form-control">
+                    <label for="custom-abv">Strength (% ABV)</label>
+                    <input type="number" id="custom-abv" placeholder="e.g., 5.2" step="0.1">
+                </div>
+            </div>
+
+            <button id="add-drink-btn">Add Drink to Session</button>
+        </div>
+
+        <div class="card">
+            <h2>Your Session</h2>
+            <div class="summary">
+                <div class="total-units-display" id="total-units">0.0</div>
+                <div class="total-drinks-display" id="total-drinks-info">0 drinks</div>
+                <div class="guideline-info" id="guideline-info"></div>
+            </div>
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+            <ul id="drink-list">
+                <p id="initial-message">Your added drinks will appear here.</p>
+            </ul>
+            <button id="clear-btn" style="display: none;">Clear Session</button>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM Elements ---
+        const addDrinkBtn = document.getElementById('add-drink-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const drinkList = document.getElementById('drink-list');
+        const initialMessage = document.getElementById('initial-message');
+        
+        const presetSelect = document.getElementById('drink-preset');
+        const customVolumeInput = document.getElementById('custom-volume');
+        const customAbvInput = document.getElementById('custom-abv');
+
+        const totalUnitsDisplay = document.getElementById('total-units');
+        const totalDrinksInfo = document.getElementById('total-drinks-info');
+        const guidelineInfo = document.getElementById('guideline-info');
+
+        const STORAGE_KEY = 'alcoholCalculatorSession';
+        let sessionDrinks = [];
+        const WEEKLY_GUIDELINE = 14;
+
+        // --- Core Functions ---
+        const saveSession = () => {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionDrinks));
+        };
+
+        const loadSession = () => {
+            const storedSession = localStorage.getItem(STORAGE_KEY);
+            if (storedSession) {
+                sessionDrinks = JSON.parse(storedSession);
+            }
+        };
+
+        const calculateUnits = (volumeMl, abv) => {
+            if (volumeMl <= 0 || abv <= 0) return 0;
+            return (volumeMl * abv) / 1000;
+        };
+
+        // --- Rendering Functions ---
+        const renderSession = () => {
+            drinkList.innerHTML = '';
+            
+            if (sessionDrinks.length === 0) {
+                initialMessage.style.display = 'block';
+                clearBtn.style.display = 'none';
+            } else {
+                initialMessage.style.display = 'none';
+                clearBtn.style.display = 'block';
+                sessionDrinks.forEach(drink => {
+                    const li = document.createElement('li');
+                    li.className = 'drink-item';
+                    li.innerHTML = `
+                        <div>
+                            <div class="drink-name">${drink.name}</div>
+                            <div class="light-text-color" style="font-size: 0.8em">${drink.volume}ml at ${drink.abv}% ABV</div>
+                        </div>
+                        <div>
+                            <span class="drink-units">${drink.units.toFixed(1)} units</span>
+                            <button class="delete-btn" data-id="${drink.id}">&times;</button>
+                        </div>
+                    `;
+                    drinkList.appendChild(li);
+                });
+            }
+            updateSummary();
+        };
+
+        const updateSummary = () => {
+            const totalUnits = sessionDrinks.reduce((sum, drink) => sum + drink.units, 0);
+            totalUnitsDisplay.textContent = totalUnits.toFixed(1);
+            totalDrinksInfo.textContent = `${sessionDrinks.length} drink${sessionDrinks.length === 1 ? '' : 's'}`;
+            
+            if (totalUnits > 0) {
+                const percentageOfGuideline = ((totalUnits / WEEKLY_GUIDELINE) * 100).toFixed(0);
+                guidelineInfo.textContent = `This is ${percentageOfGuideline}% of the recommended 14-unit weekly guideline.`;
+            } else {
+                guidelineInfo.textContent = '';
+            }
+        };
+
+        // --- Event Handlers ---
+        addDrinkBtn.addEventListener('click', () => {
+            let name, volume, abv, units;
+            
+            const presetValue = presetSelect.value;
+            if (presetValue !== 'none') {
+                // Use preset
+                const parts = presetValue.split('|');
+                name = parts[0];
+                volume = parseFloat(parts[1]);
+                abv = parseFloat(parts[2]);
+            } else {
+                // Use custom input
+                volume = parseFloat(customVolumeInput.value) || 0;
+                abv = parseFloat(customAbvInput.value) || 0;
+                if (volume <= 0 || abv <= 0) {
+                    alert('Please enter a valid volume and ABV for a custom drink.');
+                    return;
+                }
+                name = `Custom Drink`;
+            }
+
+            units = calculateUnits(volume, abv);
+            
+            sessionDrinks.push({ id: Date.now(), name, volume, abv, units });
+            
+            saveSession();
+            renderSession();
+
+            // Reset inputs
+            presetSelect.value = 'none';
+            customVolumeInput.value = '';
+            customAbvInput.value = '';
+        });
+
+        drinkList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-btn')) {
+                const drinkId = parseInt(e.target.dataset.id, 10);
+                sessionDrinks = sessionDrinks.filter(drink => drink.id !== drinkId);
+                saveSession();
+                renderSession();
+            }
+        });
+        
+        clearBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear the entire session?')) {
+                sessionDrinks = [];
+                saveSession();
+                renderSession();
+            }
+        });
+
+        // --- Initialization ---
+        const init = () => {
+            loadSession();
+            renderSession();
+        };
+
+        init();
+    });
+    </script>
+</body>
+</html>

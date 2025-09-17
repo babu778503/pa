@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<!-- Category: Health -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Visit Scheduler</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+        
+        .app-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 900px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 25px;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h2 {
+            color: #1a2980;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: #1a2980;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(26, 41, 128, 0.2);
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        button {
+            background: linear-gradient(to right, #1a2980, #26d0ce);
+            color: white;
+            border: none;
+            padding: 14px 25px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .history-list {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .history-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #1a2980;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        
+        .history-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .history-item.upcoming {
+            border-left-color: #28a745;
+        }
+        
+        .history-item.past {
+            border-left-color: #6c757d;
+        }
+        
+        .history-item.today {
+            border-left-color: #ffc107;
+        }
+        
+        .history-details {
+            flex-grow: 1;
+        }
+        
+        .history-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        
+        .history-time {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .history-meta {
+            text-align: right;
+        }
+        
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .delete-btn:hover {
+            background: #c82333;
+            transform: scale(1.1);
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1a2980;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .calendar-container {
+            margin-top: 20px;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .calendar-nav {
+            background: #1a2980;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .calendar-nav:hover {
+            background: #0d1b6a;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        
+        .calendar-day-header {
+            text-align: center;
+            font-weight: 600;
+            padding: 10px 0;
+            color: #1a2980;
+        }
+        
+        .calendar-day {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px 5px;
+            text-align: center;
+            min-height: 60px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .calendar-day:hover {
+            background: #e9ecef;
+        }
+        
+        .calendar-day.other-month {
+            color: #adb5bd;
+            background: #f1f3f5;
+        }
+        
+        .calendar-day.today {
+            background: #ffc107;
+            color: #212529;
+            font-weight: bold;
+        }
+        
+        .calendar-day.has-appointment {
+            background: #d1ecf1;
+            position: relative;
+        }
+        
+        .calendar-day.has-appointment::after {
+            content: "";
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            background: #1a2980;
+            border-radius: 50%;
+        }
+        
+        .calendar-day.selected {
+            background: #1a2980;
+            color: white;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #ced4da;
+        }
+        
+        .empty-state p {
+            font-size: 1.1rem;
+        }
+        
+        footer {
+            text-align: center;
+            color: white;
+            padding: 30px 0 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .doctor-specialty {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-left: 10px;
+            text-transform: capitalize;
+        }
+        
+        .specialty-general {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .specialty-cardiology {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .specialty-orthopedics {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .specialty-neurology {
+            background-color: #e2d9f3;
+            color: #452d6d;
+        }
+        
+        .specialty-dentistry {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .specialty-dermatology {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-top: 5px;
+            font-size: 0.8rem;
+        }
+        
+        .status-upcoming {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-past {
+            background-color: #e2e3e5;
+            color: #41464b;
+        }
+        
+        .status-today {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .appointment-details {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .detail-item {
+            margin-bottom: 10px;
+            display: flex;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            width: 120px;
+            color: #495057;
+        }
+        
+        .detail-value {
+            flex: 1;
+        }
+        
+        .calendar-view {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .calendar-sidebar {
+            flex: 1;
+        }
+        
+        .calendar-main {
+            flex: 2;
+        }
+        
+        @media (max-width: 768px) {
+            .calendar-view {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-calendar-check"></i> Doctor Visit Scheduler</h1>
+            <p>Schedule and track your doctor visits. All data is securely saved on your device.</p>
+        </header>
+        
+        <div class="app-container">
+            <div class="card">
+                <h2><i class="fas fa-plus-circle"></i> Schedule New Appointment</h2>
+                <form id="appointment-form">
+                    <div class="form-group">
+                        <label for="doctor-name">Doctor Name</label>
+                        <input type="text" id="doctor-name" placeholder="e.g., Dr. Smith" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="doctor-specialty">Specialty</label>
+                        <select id="doctor-specialty" required>
+                            <option value="">Select specialty</option>
+                            <option value="general">General Practitioner</option>
+                            <option value="cardiology">Cardiology</option>
+                            <option value="orthopedics">Orthopedics</option>
+                            <option value="neurology">Neurology</option>
+                            <option value="dentistry">Dentistry</option>
+                            <option value="dermatology">Dermatology</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="appointment-date">Date & Time</label>
+                        <input type="datetime-local" id="appointment-date" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="appointment-purpose">Purpose of Visit</label>
+                        <input type="text" id="appointment-purpose" placeholder="e.g., Annual checkup, Follow-up">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="appointment-notes">Notes (Optional)</label>
+                        <textarea id="appointment-notes" placeholder="Add any special instructions or symptoms..."></textarea>
+                    </div>
+                    
+                    <button type="submit"><i class="fas fa-save"></i> Schedule Appointment</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-history"></i> Appointment History</h2>
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-appointments">0</div>
+                        <div class="stat-label">Total Appointments</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="upcoming-count">0</div>
+                        <div class="stat-label">Upcoming</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="this-month">0</div>
+                        <div class="stat-label">This Month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="last-visit">-</div>
+                        <div class="stat-label">Last Visit</div>
+                    </div>
+                </div>
+                
+                <div class="history-list" id="history-list">
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-alt"></i>
+                        <p>No appointments scheduled yet. Schedule your first appointment to get started!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" style="margin-top: 25px;">
+            <h2><i class="fas fa-calendar-alt"></i> Appointment Calendar</h2>
+            <div class="calendar-view">
+                <div class="calendar-sidebar">
+                    <div class="appointment-details" id="appointment-details">
+                        <div class="empty-state">
+                            <i class="fas fa-info-circle"></i>
+                            <p>Select a date to view appointment details</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="calendar-main">
+                    <div class="calendar-container">
+                        <div class="calendar-header">
+                            <button class="calendar-nav" id="prev-month"><i class="fas fa-chevron-left"></i></button>
+                            <h3 id="current-month">June 2023</h3>
+                            <button class="calendar-nav" id="next-month"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                        <div class="calendar-grid" id="calendar-grid">
+                            <!-- Calendar will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Doctor Visit Scheduler &copy; 2023 | All data is stored locally on your device</p>
+        </footer>
+    </div>
+
+    <script>
+        // Calendar variables
+        let currentDate = new Date();
+        let selectedDate = null;
+        let appointments = [];
+        
+        // DOM elements
+        const prevMonthBtn = document.getElementById('prev-month');
+        const nextMonthBtn = document.getElementById('next-month');
+        const currentMonthEl = document.getElementById('current-month');
+        const calendarGrid = document.getElementById('calendar-grid');
+        const appointmentDetails = document.getElementById('appointment-details');
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default datetime to tomorrow at 10:00 AM
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(10, 0, 0, 0);
+            document.getElementById('appointment-date').value = tomorrow.toISOString().slice(0,16);
+            
+            // Load existing data
+            loadAppointments();
+            
+            // Set up form submission
+            document.getElementById('appointment-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveAppointment();
+            });
+            
+            // Set up calendar navigation
+            prevMonthBtn.addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                renderCalendar();
+            });
+            
+            nextMonthBtn.addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                renderCalendar();
+            });
+            
+            // Render initial calendar
+            renderCalendar();
+        });
+        
+        // Load appointments from localStorage
+        function loadAppointments() {
+            appointments = JSON.parse(localStorage.getItem('doctorAppointments')) || [];
+            displayAppointments();
+            updateStats();
+            renderCalendar();
+        }
+        
+        // Save a new appointment
+        function saveAppointment() {
+            const doctorName = document.getElementById('doctor-name').value;
+            const doctorSpecialty = document.getElementById('doctor-specialty').value;
+            const appointmentDate = document.getElementById('appointment-date').value;
+            const appointmentPurpose = document.getElementById('appointment-purpose').value;
+            const appointmentNotes = document.getElementById('appointment-notes').value;
+            
+            if (!doctorName || !doctorSpecialty || !appointmentDate) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            const appointment = {
+                id: Date.now(),
+                doctor: doctorName,
+                specialty: doctorSpecialty,
+                date: appointmentDate,
+                purpose: appointmentPurpose,
+                notes: appointmentNotes
+            };
+            
+            // Add new appointment
+            appointments.push(appointment);
+            
+            // Save to localStorage
+            localStorage.setItem('doctorAppointments', JSON.stringify(appointments));
+            
+            // Update UI
+            displayAppointments();
+            updateStats();
+            renderCalendar();
+            
+            // Reset form
+            document.getElementById('appointment-form').reset();
+            
+            // Set datetime back to tomorrow at 10:00 AM
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(10, 0, 0, 0);
+            document.getElementById('appointment-date').value = tomorrow.toISOString().slice(0,16);
+        }
+        
+        // Display appointments in the history list
+        function displayAppointments() {
+            const historyList = document.getElementById('history-list');
+            
+            if (appointments.length === 0) {
+                historyList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-alt"></i>
+                        <p>No appointments scheduled yet. Schedule your first appointment to get started!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort appointments by date (newest first)
+            const sortedAppointments = [...appointments].sort((a, b) => 
+                new Date(b.date) - new Date(a.date)
+            );
+            
+            historyList.innerHTML = '';
+            
+            sortedAppointments.forEach(appointment => {
+                const date = new Date(appointment.date);
+                const formattedDate = date.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                });
+                const formattedTime = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                // Determine status
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const appointmentDate = new Date(date);
+                appointmentDate.setHours(0, 0, 0, 0);
+                
+                let statusClass = 'past';
+                let statusText = 'Past';
+                
+                if (appointmentDate > today) {
+                    statusClass = 'upcoming';
+                    statusText = 'Upcoming';
+                } else if (appointmentDate.getTime() === today.getTime()) {
+                    statusClass = 'today';
+                    statusText = 'Today';
+                }
+                
+                const appointmentElement = document.createElement('div');
+                appointmentElement.className = `history-item ${statusClass}`;
+                appointmentElement.innerHTML = `
+                    <div class="history-details">
+                        <div class="history-value">${appointment.doctor} 
+                            <span class="doctor-specialty specialty-${appointment.specialty}">${appointment.specialty}</span>
+                        </div>
+                        <div class="history-time">${formattedDate} at ${formattedTime}</div>
+                        <div class="status-badge status-${statusClass}">${statusText}</div>
+                        ${appointment.purpose ? `<div class="history-meta">${appointment.purpose}</div>` : ''}
+                    </div>
+                    <div class="history-actions">
+                        <button class="delete-btn" data-id="${appointment.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                
+                historyList.appendChild(appointmentElement);
+            });
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    deleteAppointment(id);
+                });
+            });
+        }
+        
+        // Delete an appointment
+        function deleteAppointment(id) {
+            if (confirm('Are you sure you want to delete this appointment?')) {
+                appointments = appointments.filter(appointment => appointment.id !== id);
+                localStorage.setItem('doctorAppointments', JSON.stringify(appointments));
+                displayAppointments();
+                updateStats();
+                renderCalendar();
+                
+                // Clear details if deleted appointment was selected
+                if (selectedDate) {
+                    const selectedAppointments = getAppointmentsForDate(selectedDate);
+                    if (selectedAppointments.length === 0) {
+                        appointmentDetails.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-info-circle"></i>
+                                <p>No appointments on this date</p>
+                            </div>
+                        `;
+                    }
+                }
+            }
+        }
+        
+        // Update statistics
+        function updateStats() {
+            const totalAppointments = appointments.length;
+            document.getElementById('total-appointments').textContent = totalAppointments;
+            
+            if (totalAppointments > 0) {
+                // Upcoming appointments
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const upcomingCount = appointments.filter(app => 
+                    new Date(app.date) > today
+                ).length;
+                document.getElementById('upcoming-count').textContent = upcomingCount;
+                
+                // Appointments this month
+                const thisMonth = new Date().getMonth();
+                const thisYear = new Date().getFullYear();
+                const thisMonthCount = appointments.filter(app => {
+                    const appDate = new Date(app.date);
+                    return appDate.getMonth() === thisMonth && appDate.getFullYear() === thisYear;
+                }).length;
+                document.getElementById('this-month').textContent = thisMonthCount;
+                
+                // Last visit
+                const pastAppointments = appointments.filter(app => 
+                    new Date(app.date) < today
+                ).sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                if (pastAppointments.length > 0) {
+                    const lastVisit = new Date(pastAppointments[0].date);
+                    document.getElementById('last-visit').textContent = lastVisit.toLocaleDateString();
+                } else {
+                    document.getElementById('last-visit').textContent = 'None';
+                }
+            } else {
+                document.getElementById('upcoming-count').textContent = '0';
+                document.getElementById('this-month').textContent = '0';
+                document.getElementById('last-visit').textContent = '-';
+            }
+        }
+        
+        // Render calendar
+        function renderCalendar() {
+            // Update current month display
+            currentMonthEl.textContent = currentDate.toLocaleDateString('en-US', { 
+                month: 'long', 
+                year: 'numeric' 
+            });
+            
+            // Clear calendar grid
+            calendarGrid.innerHTML = '';
+            
+            // Create day headers
+            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayHeaders.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'calendar-day-header';
+                dayHeader.textContent = day;
+                calendarGrid.appendChild(dayHeader);
+            });
+            
+            // Get first day of month and last day of month
+            const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+            
+            // Get the day of the week for the first day (0 = Sunday, 1 = Monday, etc)
+            const firstDayOfWeek = firstDay.getDay();
+            
+            // Get today's date for comparison
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            // Add empty cells for days before the first day of the month
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day other-month';
+                calendarGrid.appendChild(emptyDay);
+            }
+            
+            // Add cells for each day of the month
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const dayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                dayElement.textContent = day;
+                dayElement.dataset.date = dayDate.toISOString().split('T')[0];
+                
+                // Check if this is today
+                if (dayDate.getTime() === today.getTime()) {
+                    dayElement.classList.add('today');
+                }
+                
+                // Check if there are appointments on this day
+                const dayAppointments = getAppointmentsForDate(dayDate);
+                if (dayAppointments.length > 0) {
+                    dayElement.classList.add('has-appointment');
+                }
+                
+                // Add click event
+                dayElement.addEventListener('click', () => {
+                    selectDate(dayDate);
+                });
+                
+                calendarGrid.appendChild(dayElement);
+            }
+            
+            // Calculate how many days we've added so far
+            const totalCells = firstDayOfWeek + lastDay.getDate();
+            const remainingCells = 42 - totalCells; // 6 rows * 7 days
+            
+            // Add empty cells for the next month
+            for (let i = 0; i < remainingCells; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day other-month';
+                calendarGrid.appendChild(emptyDay);
+            }
+        }
+        
+        // Get appointments for a specific date
+        function getAppointmentsForDate(date) {
+            const dateString = date.toISOString().split('T')[0];
+            return appointments.filter(app => 
+                app.date.startsWith(dateString)
+            );
+        }
+        
+        // Select a date and show details
+        function selectDate(date) {
+            selectedDate = date;
+            
+            // Update UI to show selected date
+            document.querySelectorAll('.calendar-day').forEach(day => {
+                day.classList.remove('selected');
+                if (day.dataset.date === date.toISOString().split('T')[0]) {
+                    day.classList.add('selected');
+                }
+            });
+            
+            // Show appointment details
+            const dayAppointments = getAppointmentsForDate(date);
+            
+            if (dayAppointments.length === 0) {
+                appointmentDetails.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-info-circle"></i>
+                        <p>No appointments on this date</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort appointments by time
+            dayAppointments.sort((a, b) => 
+                new Date(a.date) - new Date(b.date)
+            );
+            
+            let detailsHTML = `<h3>Appointments on ${date.toLocaleDateString()}</h3>`;
+            
+            dayAppointments.forEach(app => {
+                const appDate = new Date(app.date);
+                const time = appDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                detailsHTML += `
+                    <div class="appointment-details-item" style="margin-top: 15px; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div class="detail-item">
+                            <div class="detail-label">Doctor:</div>
+                            <div class="detail-value">${app.doctor}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Time:</div>
+                            <div class="detail-value">${time}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Specialty:</div>
+                            <div class="detail-value">${app.specialty.charAt(0).toUpperCase() + app.specialty.slice(1)}</div>
+                        </div>
+                        ${app.purpose ? `
+                        <div class="detail-item">
+                            <div class="detail-label">Purpose:</div>
+                            <div class="detail-value">${app.purpose}</div>
+                        </div>
+                        ` : ''}
+                        ${app.notes ? `
+                        <div class="detail-item">
+                            <div class="detail-label">Notes:</div>
+                            <div class="detail-value">${app.notes}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            
+            appointmentDetails.innerHTML = detailsHTML;
+        }
+    </script>
+</body>
+</html>

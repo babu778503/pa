@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<!-- Category: Utility -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Usage Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #34495e; /* Wet Asphalt */
+            --secondary-color: #3498db;
+            --background-color: #ecf0f1;
+            --card-background: #ffffff;
+            --text-color: #2c3e50;
+            --border-color: #bdc3c7;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0; padding: 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1, h2 { color: var(--primary-color); text-align: center; }
+        h2 { margin-top: 30px; border-bottom: 2px solid var(--background-color); padding-bottom: 10px; }
+        .card { background-color: var(--card-background); border-radius: 12px; box-shadow: 0 5px 20px var(--shadow-color); padding: 25px; margin-bottom: 25px; }
+        .main-layout { display: grid; grid-template-columns: 1fr; gap: 25px; }
+        @media (min-width: 800px) { .main-layout { grid-template-columns: 1fr 1fr; } }
+        
+        /* --- Timer & Session --- */
+        #active-session-card { text-align: center; border: 2px solid var(--secondary-color); }
+        #active-session-card.hidden { display: none; }
+        #session-timer { font-size: 3rem; font-weight: 700; margin: 10px 0; }
+        #stop-session-btn { padding: 10px 20px; border: none; border-radius: 8px; background-color: #e74c3c; color: white; font-weight: 600; cursor: pointer; }
+        
+        .session-starter-list li { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .session-starter-list button { background-color: var(--secondary-color); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
+
+        /* --- Usage Breakdown --- */
+        .usage-breakdown-list { list-style: none; padding: 0; }
+        .usage-item { margin-bottom: 10px; }
+        .usage-item-header { display: flex; justify-content: space-between; font-weight: 500; margin-bottom: 5px; }
+        .progress-bar { height: 10px; background-color: #e9ecef; border-radius: 5px; overflow: hidden; }
+        .progress-bar div { height: 100%; border-radius: 5px; }
+
+        /* --- App Library --- */
+        #app-library-form { display: flex; gap: 10px; margin-bottom: 15px; }
+        #app-library-form input { flex-grow: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; }
+        #addAppBtn { background-color: var(--primary-color); color: white; border: none; padding: 0 15px; border-radius: 5px; cursor: pointer; }
+        #app-library-list li { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #f0f0f0; }
+        
+        ul { list-style: none; padding: 0; }
+        .delete-btn { background: none; border: none; color: #aaa; cursor: pointer; }
+
+        #resetAllBtn { display: block; margin: 25px auto 0; background: none; border: none; color: #999; text-decoration: underline; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>App Usage Monitor</h1>
+
+        <div class="card hidden" id="active-session-card">
+            <h2 id="active-session-name"></h2>
+            <div id="session-timer">00:00:00</div>
+            <button id="stop-session-btn">Stop Session</button>
+        </div>
+
+        <div class="main-layout">
+            <div class="card">
+                <h2>Today's Usage</h2>
+                <canvas id="today-chart" height="200"></canvas>
+                <div id="usage-breakdown-list" class="usage-breakdown-list"></div>
+            </div>
+            <div class="card">
+                <h2>Start a Session</h2>
+                <ul id="session-starter-list" class="session-starter-list"></ul>
+            </div>
+        </div>
+        
+        <div class="main-layout">
+            <div class="card">
+                <h2>Weekly Total Usage</h2>
+                <canvas id="weekly-chart" height="200"></canvas>
+            </div>
+            <div class="card">
+                <h2>Manage Your Apps</h2>
+                <form id="app-library-form">
+                    <input type="text" id="appNameInput" placeholder="e.g., Instagram, Work" required>
+                    <input type="color" id="appColorInput" value="#3498db">
+                    <button id="addAppBtn" type="submit">+</button>
+                </form>
+                <ul id="app-library-list"></ul>
+            </div>
+        </div>
+
+        <button id="resetAllBtn">Reset All Data</button>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM Elements ---
+        const activeSessionCard = document.getElementById('active-session-card');
+        const sessionStarterList = document.getElementById('session-starter-list');
+        const appLibraryList = document.getElementById('app-library-list');
+        const addAppForm = document.getElementById('app-library-form');
+        const usageBreakdownList = document.getElementById('usage-breakdown-list');
+        const todayChartCanvas = document.getElementById('today-chart');
+        const weeklyChartCanvas = document.getElementById('weekly-chart');
+        const resetAllBtn = document.getElementById('resetAllBtn');
+
+        // --- State ---
+        const STORAGE_KEY = 'appUsageMonitorData';
+        let state = { apps: [], log: {} }; // log: { 'YYYY-MM-DD': [{appId, durationSecs}] }
+        let currentSession = { appId: null, startTime: null, intervalId: null };
+        let wasActiveBeforeBlur = false;
+        let todayChart, weeklyChart;
+        const toYYYYMMDD = d => new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+
+        // --- Core Functions ---
+        const loadState = () => { if(localStorage.getItem(STORAGE_KEY)) state = JSON.parse(localStorage.getItem(STORAGE_KEY)); };
+        const saveState = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+        function renderAll() {
+            renderAppLibrary();
+            renderSessionStarters();
+            renderDailyBreakdown();
+            renderWeeklyChart();
+        }
+
+        function renderAppLibrary() {
+            appLibraryList.innerHTML = '';
+            state.apps.forEach(app => {
+                appLibraryList.innerHTML += `<li>
+                    <span><span style="color:${app.color};">●</span> ${app.name}</span>
+                    <button class="delete-btn" data-id="${app.id}">&times;</button>
+                </li>`;
+            });
+        }
+        
+        function renderSessionStarters() {
+            sessionStarterList.innerHTML = '';
+            if (state.apps.length === 0) {
+                sessionStarterList.innerHTML = `<p style="text-align:center; color:#999;">Add an app below to begin tracking.</p>`;
+                return;
+            }
+            state.apps.forEach(app => {
+                sessionStarterList.innerHTML += `<li>
+                    <span><span style="color:${app.color};">●</span> ${app.name}</span>
+                    <button class="start-btn" data-id="${app.id}">Start</button>
+                </li>`;
+            });
+        }
+
+        function getDailyUsage() {
+            const todayStr = toYYYYMMDD(new Date());
+            const todayLog = state.log[todayStr] || [];
+            const usageMap = new Map();
+            todayLog.forEach(entry => {
+                usageMap.set(entry.appId, (usageMap.get(entry.appId) || 0) + entry.durationSecs);
+            });
+            return usageMap;
+        }
+
+        function renderDailyBreakdown() {
+            const usageMap = getDailyUsage();
+            const totalSeconds = Array.from(usageMap.values()).reduce((sum, s) => sum + s, 0);
+            
+            usageBreakdownList.innerHTML = '';
+            const sortedUsage = [...usageMap.entries()].sort((a,b) => b[1] - a[1]);
+
+            sortedUsage.forEach(([appId, seconds]) => {
+                const app = state.apps.find(a => a.id == appId);
+                if (!app) return;
+                const percentage = totalSeconds > 0 ? (seconds / totalSeconds) * 100 : 0;
+                usageBreakdownList.innerHTML += `<li class="usage-item">
+                    <div class="usage-item-header">
+                        <span>${app.name}</span>
+                        <span>${formatSecondsToReadable(seconds)}</span>
+                    </div>
+                    <div class="progress-bar"><div style="width: ${percentage}%; background-color: ${app.color};"></div></div>
+                </li>`;
+            });
+
+            // Render Chart
+            const chartLabels = sortedUsage.map(([appId]) => state.apps.find(a => a.id == appId)?.name || 'Unknown');
+            const chartData = sortedUsage.map(([_, seconds]) => Math.round(seconds / 60)); // in minutes
+            const chartColors = sortedUsage.map(([appId]) => state.apps.find(a => a.id == appId)?.color || '#ccc');
+
+            if (todayChart) todayChart.destroy();
+            todayChart = new Chart(todayChartCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{ data: chartData, backgroundColor: chartColors, borderWidth: 0 }]
+                },
+                options: { plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        function renderWeeklyChart() {
+            const labels = [];
+            const data = [];
+            for(let i=6; i>=0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                const dateStr = toYYYYMMDD(date);
+                labels.push(date.toLocaleDateString(undefined, {weekday: 'short'}));
+                const dayLog = state.log[dateStr] || [];
+                const totalMins = dayLog.reduce((sum, entry) => sum + entry.durationSecs, 0) / 60;
+                data.push(totalMins.toFixed(0));
+            }
+
+            if (weeklyChart) weeklyChart.destroy();
+            weeklyChart = new Chart(weeklyChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{ label: 'Total Usage (minutes)', data, backgroundColor: 'var(--secondary-color)' }]
+                },
+                options: { scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        // --- Session Timer ---
+        function startSession(appId) {
+            if (currentSession.appId) { alert("Another session is already running."); return; }
+            currentSession = { appId, startTime: Date.now(), intervalId: setInterval(updateTimerDisplay, 1000) };
+            
+            const app = state.apps.find(a => a.id == appId);
+            document.getElementById('active-session-name').textContent = `Tracking: ${app.name}`;
+            activeSessionCard.classList.remove('hidden');
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const elapsed = Date.now() - currentSession.startTime;
+            document.getElementById('session-timer').textContent = formatSecondsToHHMMSS(Math.floor(elapsed / 1000));
+        }
+
+        function stopSession() {
+            clearInterval(currentSession.intervalId);
+            const durationSecs = Math.round((Date.now() - currentSession.startTime) / 1000);
+            
+            const todayStr = toYYYYMMDD(new Date());
+            if (!state.log[todayStr]) state.log[todayStr] = [];
+            state.log[todayStr].push({ appId: currentSession.appId, durationSecs });
+            
+            currentSession = { appId: null, startTime: null, intervalId: null };
+            activeSessionCard.classList.add('hidden');
+            saveState();
+            renderDailyBreakdown();
+            renderWeeklyChart();
+        }
+
+        function formatSecondsToHHMMSS(s) {
+            const h = Math.floor(s / 3600).toString().padStart(2, '0');
+            const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
+            const sec = (s % 60).toString().padStart(2, '0');
+            return `${h}:${m}:${sec}`;
+        }
+        function formatSecondsToReadable(s) {
+            const h = Math.floor(s / 3600);
+            const m = Math.round((s % 3600) / 60);
+            if (h > 0) return `${h}h ${m}m`;
+            return `${m}m`;
+        }
+        
+        // --- Event Handlers ---
+        addAppForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const name = document.getElementById('appNameInput').value.trim();
+            const color = document.getElementById('appColorInput').value;
+            if (name) {
+                state.apps.push({ id: Date.now(), name, color });
+                saveState(); renderAll(); addAppForm.reset();
+            }
+        });
+
+        document.body.addEventListener('click', e => {
+            if (e.target.classList.contains('delete-btn')) {
+                const id = e.target.dataset.id;
+                state.apps = state.apps.filter(app => app.id != id);
+                saveState(); renderAll();
+            }
+            if (e.target.classList.contains('start-btn')) startSession(e.target.dataset.id);
+            if (e.target.id === 'stop-session-btn') stopSession();
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if(currentSession.intervalId) {
+                    wasActiveBeforeBlur = true;
+                    clearInterval(currentSession.intervalId);
+                }
+            } else {
+                if (wasActiveBeforeBlur) {
+                    wasActiveBeforeBlur = false;
+                    // Adjust start time to account for time spent away
+                    currentSession.startTime = Date.now() - (Date.now() - currentSession.startTime);
+                    currentSession.intervalId = setInterval(updateTimerDisplay, 1000);
+                }
+            }
+        });
+
+        resetAllBtn.addEventListener('click', () => {
+            if (confirm("Reset ALL data? This will delete your apps and usage history.")) {
+                state = { apps: [], log: {} };
+                saveState(); renderAll();
+            }
+        });
+
+        // --- Initial Load ---
+        loadState();
+        renderAll();
+    });
+    </script>
+</body>
+</html>

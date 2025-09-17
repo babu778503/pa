@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<!-- Category: Health -->
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asthma Trigger Monitor</title>
+    <!-- Favicon using a data URI -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🫁</text></svg>">
+    <style>
+        :root {
+            --color-primary: #3498db;   /* Blue */
+            --color-dark: #2c3e50;
+            --color-light-bg: #f4f7f6;
+            --color-card-bg: #ffffff;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --radius: 8px;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            
+            --level-mild: #f1c40f;
+            --level-moderate: #e67e22;
+            --level-severe: #c0392b;
+        }
+
+        body {
+            font-family: var(--font-family); background-color: var(--color-light-bg);
+            color: var(--color-dark); margin: 0; padding: 20px;
+        }
+
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        .disclaimer {
+            background-color: #fbeae5; border: 2px solid #c0392b; color: #c0392b;
+            padding: 15px; border-radius: var(--radius); margin-bottom: 25px; font-size: 0.9rem;
+        }
+        .disclaimer strong { display: block; margin-bottom: 5px; font-size: 1.1rem; }
+        
+        header { text-align: center; margin-bottom: 25px; }
+        header h1 { margin: 0; }
+        
+        .panel { background: var(--color-card-bg); padding: 25px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 25px; }
+        .panel h2 { color: var(--color-primary); margin-top: 0; }
+        
+        .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: center; }
+        .stat-card .label { font-size: 0.9rem; color: #7f8c8d; }
+        .stat-card .value { font-size: 1.5rem; font-weight: bold; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px; border: 1px solid #ccc;
+            border-radius: var(--radius); box-sizing: border-box;
+        }
+        
+        #triggers-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+        #triggers-container label { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+        
+        #add-log-btn {
+            width: 100%; padding: 12px; font-size: 1.1rem; font-weight: bold;
+            color: white; background-color: var(--color-primary); border: none;
+            border-radius: var(--radius); cursor: pointer; margin-top: 15px;
+        }
+
+        #log-list { list-style: none; padding: 0; }
+        .log-card {
+            border-left: 5px solid; padding: 15px; margin-bottom: 15px;
+            background: #f9f9f9; border-radius: var(--radius);
+        }
+        .log-card.severity-mild { border-color: var(--level-mild); }
+        .log-card.severity-moderate { border-color: var(--level-moderate); }
+        .log-card.severity-severe { border-color: var(--level-severe); }
+
+        .log-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .log-date { font-size: 0.9rem; color: #7f8c8d; }
+        .log-severity { font-weight: bold; }
+        .log-body p { margin: 10px 0; }
+        .log-body strong { color: var(--color-primary); }
+        .delete-log-btn { background: none; border: none; color: #ccc; cursor: pointer; font-size: 1.5rem; }
+
+        .table-actions { margin-top: 15px; display: flex; justify-content: flex-end; gap: 15px; }
+        .action-button { padding: 8px 15px; border-radius: var(--radius); border: none; cursor: pointer; font-weight: bold; }
+        #export-csv-btn { background-color: #27ae60; color: white; }
+        #clear-data-btn { background-color: #7f8c8d; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="disclaimer">
+            <strong>MEDICAL DISCLAIMER</strong>
+            This tool is for informational logging purposes only and is NOT a substitute for professional medical advice. If you are having a severe asthma attack, call emergency services or go to the nearest hospital. Always follow the advice of your healthcare provider.
+        </div>
+        
+        <header>
+            <h1>Asthma Trigger Monitor</h1>
+        </header>
+
+        <section class="panel">
+            <h2>Dashboard</h2>
+            <div class="dashboard">
+                <div class="stat-card"><div class="label">Symptom-Free Days</div><div class="value" id="symptom-free-days">--</div></div>
+                <div class="stat-card"><div class="label">Top Trigger</div><div class="value" id="top-trigger">--</div></div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Log a Symptom Event</h2>
+            <form id="log-form">
+                <div class="form-group">
+                    <label for="severity">Symptom Severity</label>
+                    <select id="severity" required>
+                        <option value="mild">Mild (minor wheezing, slight tightness)</option>
+                        <option value="moderate">Moderate (obvious wheezing, some difficulty breathing)</option>
+                        <option value="severe">Severe (very difficult to breathe, seek help)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Potential Triggers</label>
+                    <div id="triggers-container">
+                        <label><input type="checkbox" data-trigger="Pollen"> Pollen</label>
+                        <label><input type="checkbox" data-trigger="Dust"> Dust Mites</label>
+                        <label><input type="checkbox" data-trigger="Smoke"> Smoke</label>
+                        <label><input type="checkbox" data-trigger="Pets"> Pets</label>
+                        <label><input type="checkbox" data-trigger="Cold Air"> Cold Air</label>
+                        <label><input type="checkbox" data-trigger="Exercise"> Exercise</label>
+                        <label><input type="checkbox" data-trigger="Stress"> Stress</label>
+                        <label><input type="checkbox" data-trigger="Other"> Other</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="action-taken">Action Taken / Notes</label>
+                    <textarea id="action-taken" rows="2" placeholder="e.g., Used rescue inhaler (2 puffs)" required></textarea>
+                </div>
+                <button type="submit" id="add-log-btn">Add Log Entry</button>
+            </form>
+        </section>
+
+        <section class="panel">
+            <h2>Symptom Log</h2>
+            <div id="log-list">
+                 <p id="empty-log-msg" style="text-align:center; color:#7f8c8d;">No symptoms logged yet.</p>
+            </div>
+            <div class="table-actions">
+                <button id="export-csv-btn" class="action-button">Export to CSV</button>
+                <button id="clear-data-btn" class="action-button">Clear All Data</button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const STORAGE_KEY = 'asthmaMonitorData';
+        let logData = [];
+
+        const logForm = document.getElementById('log-form');
+        const logList = document.getElementById('log-list');
+        const emptyLogMsg = document.getElementById('empty-log-msg');
+
+        function render() {
+            const sortedLog = logData.sort((a,b) => new Date(b.date) - new Date(a.date));
+            logList.innerHTML = '';
+            emptyLogMsg.style.display = sortedLog.length === 0 ? 'block' : 'none';
+
+            sortedLog.forEach(entry => {
+                const card = document.createElement('div');
+                card.className = `log-card severity-${entry.severity}`;
+                card.innerHTML = `
+                    <div class="log-header">
+                        <div>
+                            <div class="log-severity">${entry.severity.charAt(0).toUpperCase() + entry.severity.slice(1)} Event</div>
+                            <div class="log-date">${new Date(entry.date).toLocaleString()}</div>
+                        </div>
+                        <button class="delete-log-btn" data-id="${entry.id}">×</button>
+                    </div>
+                    <div class="log-body">
+                        <p><strong>Triggers:</strong> ${entry.triggers.join(', ') || 'None specified'}</p>
+                        <p><strong>Action/Notes:</strong> ${entry.action}</p>
+                    </div>
+                `;
+                logList.appendChild(card);
+            });
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            if (logData.length === 0) {
+                document.getElementById('symptom-free-days').textContent = '--';
+                document.getElementById('top-trigger').textContent = 'N/A';
+                return;
+            }
+
+            // Symptom-free days
+            const firstLogDate = new Date(logData.sort((a,b) => new Date(a.date) - new Date(b.date))[0].date);
+            const totalDaysTracked = Math.ceil((new Date() - firstLogDate) / (1000 * 60 * 60 * 24));
+            const symptomDays = new Set(logData.map(entry => new Date(entry.date).toDateString())).size;
+            document.getElementById('symptom-free-days').textContent = totalDaysTracked - symptomDays;
+
+            // Top trigger
+            const triggerCounts = {};
+            logData.forEach(entry => {
+                entry.triggers.forEach(trigger => {
+                    triggerCounts[trigger] = (triggerCounts[trigger] || 0) + 1;
+                });
+            });
+            const topTrigger = Object.entries(triggerCounts).sort((a,b) => b[1] - a[1])[0];
+            document.getElementById('top-trigger').textContent = topTrigger ? topTrigger[0] : 'N/A';
+        }
+
+        function handleLogSubmit(e) {
+            e.preventDefault();
+            const selectedTriggers = Array.from(document.querySelectorAll('#triggers-container input:checked')).map(cb => cb.dataset.trigger);
+            const newEntry = {
+                id: Date.now(),
+                date: new Date().toISOString(),
+                severity: document.getElementById('severity').value,
+                triggers: selectedTriggers,
+                action: document.getElementById('action-taken').value
+            };
+            logData.push(newEntry);
+            saveAndRender();
+            logForm.reset();
+        }
+
+        function saveAndRender() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(logData));
+            render();
+        }
+
+        function loadData() {
+            const savedData = localStorage.getItem(STORAGE_KEY);
+            if (savedData) logData = JSON.parse(savedData);
+            render();
+        }
+
+        function exportToCSV() {
+            if (logData.length === 0) return alert("No data to export.");
+            const headers = ['DateTime', 'Severity', 'Triggers', 'Action/Notes'];
+            let csvContent = "data:text/csv;charset=utf-8," + headers.join(',') + "\n";
+            logData.forEach(entry => {
+                const row = [
+                    new Date(entry.date).toLocaleString(),
+                    entry.severity,
+                    `"${entry.triggers.join(', ')}"`,
+                    `"${entry.action.replace(/"/g, '""')}"`
+                ];
+                csvContent += row.join(',') + "\n";
+            });
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csvContent));
+            link.setAttribute("download", "asthma_log.csv");
+            link.click();
+        }
+        
+        logForm.addEventListener('submit', handleLogSubmit);
+        logList.addEventListener('click', e => {
+            if (e.target.classList.contains('delete-log-btn')) {
+                const id = parseInt(e.target.dataset.id);
+                if (confirm("Delete this log entry?")) {
+                    logData = logData.filter(entry => entry.id !== id);
+                    saveAndRender();
+                }
+            }
+        });
+        
+        document.getElementById('export-csv-btn').addEventListener('click', exportToCSV);
+        document.getElementById('clear-data-btn').addEventListener('click', () => {
+            if (confirm("Are you sure you want to delete ALL your data? This cannot be undone.")) {
+                logData = [];
+                saveAndRender();
+            }
+        });
+
+        loadData();
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appliance Energy Cost Calculator</title>
+
+    <style>
+        /* --- General Styling --- */
+        :root {
+            --primary-color: #f39c12; /* Energy Yellow/Orange */
+            --secondary-color: #e67e22;
+            --background-color: #fdf2e5;
+            --card-background: #ffffff;
+            --text-color: #3d3d3d;
+            --border-color: #fceec9;
+            --shadow-color: rgba(243, 156, 18, 0.15);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1, h2 { color: var(--primary-color); text-align: center; }
+        h2 { margin-top: 30px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
+
+        .card {
+            background-color: var(--card-background);
+            border-radius: 12px;
+            box-shadow: 0 5px 20px var(--shadow-color);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        /* --- Main Layout --- */
+        .main-layout { display: grid; grid-template-columns: 1fr; gap: 25px; }
+        @media (min-width: 768px) { .main-layout { grid-template-columns: 1fr 1fr; } }
+        
+        /* --- Input Form --- */
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 8px; }
+        .input-row { display: flex; align-items: center; gap: 10px; }
+        input[type="number"] {
+            width: 100%; padding: 10px; border-radius: 5px;
+            border: 1px solid var(--border-color); font-size: 1rem; box-sizing: border-box;
+        }
+        input[type="range"] { width: 100%; margin-top: 10px; }
+        
+        /* --- Results Section --- */
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            text-align: center;
+        }
+        .result-item .label { color: #777; }
+        .result-item .value { font-size: 2rem; font-weight: 700; color: var(--secondary-color); }
+        .full-width { grid-column: 1 / -1; }
+        .full-width .value { font-size: 2.5rem; }
+
+        /* --- Reference Section --- */
+        #reference-list ul {
+            list-style: none; padding: 0; column-count: 2;
+            column-gap: 20px; font-size: 0.9rem;
+        }
+        #reference-list li { padding: 4px 0; display: flex; justify-content: space-between; }
+        #reference-list span { color: #777; }
+        
+        /* --- Footer --- */
+        #resetBtn { display: block; margin: 25px auto 0; background: none; border: none; color: #999; text-decoration: underline; cursor: pointer; }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Appliance Energy Cost Calculator</h1>
+        
+        <div class="main-layout">
+            <div class="card">
+                <h2>Appliance Details</h2>
+                <div class="form-group">
+                    <label for="wattage">Appliance Power (Watts)</label>
+                    <input type="number" id="wattage" min="0" placeholder="e.g., 1500">
+                </div>
+                <div class="form-group">
+                    <label for="hours-used">Hours Used Per Day</label>
+                    <div class="input-row">
+                        <input type="number" id="hours-used" min="0" max="24" step="0.1" value="1">
+                        <span>hours</span>
+                    </div>
+                    <input type="range" id="hours-slider" min="0" max="24" step="0.1" value="1">
+                </div>
+                <div class="form-group">
+                    <label for="kwh-cost">Electricity Cost ($ per kWh)</label>
+                    <input type="number" id="kwh-cost" min="0" step="0.01" value="0.17">
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Estimated Cost</h2>
+                <div class="results-grid">
+                    <div class="result-item">
+                        <p class="label">Per Day</p>
+                        <p class="value" id="cost-day">$0.00</p>
+                    </div>
+                     <div class="result-item">
+                        <p class="label">Per Week</p>
+                        <p class="value" id="cost-week">$0.00</p>
+                    </div>
+                    <div class="result-item full-width">
+                        <p class="label">Per Month</p>
+                        <p class="value" id="cost-month">$0.00</p>
+                    </div>
+                    <div class="result-item full-width">
+                        <p class="label">Per Year</p>
+                        <p class="value" id="cost-year">$0.00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="reference-list">
+            <h2>Common Appliance Wattages (Approx.)</h2>
+            <ul>
+                <li>Toaster <span>800-1500W</span></li>
+                <li>Microwave <span>600-1200W</span></li>
+                <li>Coffee Maker <span>800-1400W</span></li>
+                <li>Dishwasher <span>1200-2400W</span></li>
+                <li>Refrigerator <span>150-400W</span></li>
+                <li>Washing Machine <span>400-1300W</span></li>
+                <li>Clothes Dryer <span>1800-5000W</span></li>
+                <li>Desktop PC <span>200-500W</span></li>
+                <li>Laptop <span>50-100W</span></li>
+                <li>60" LED TV <span>60-100W</span></li>
+                <li>Game Console <span>150-200W</span></li>
+                <li>Space Heater <span>750-1500W</span></li>
+            </ul>
+        </div>
+        
+        <button id="resetBtn">Reset Saved Data</button>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM Elements ---
+        const inputs = {
+            wattage: document.getElementById('wattage'),
+            hoursUsed: document.getElementById('hours-used'),
+            kwhCost: document.getElementById('kwh-cost')
+        };
+        const hoursSlider = document.getElementById('hours-slider');
+        const costElements = {
+            day: document.getElementById('cost-day'),
+            week: document.getElementById('cost-week'),
+            month: document.getElementById('cost-month'),
+            year: document.getElementById('cost-year')
+        };
+        const resetBtn = document.getElementById('resetBtn');
+        
+        // --- State ---
+        const STORAGE_KEY = 'applianceCostData';
+        
+        // --- Core Functions ---
+        function loadState() {
+            const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            if (data) {
+                for (const key in inputs) {
+                    if (data[key]) inputs[key].value = data[key];
+                }
+                hoursSlider.value = inputs.hoursUsed.value;
+            }
+        }
+        function saveState() {
+            const data = {};
+            for (const key in inputs) {
+                data[key] = inputs[key].value;
+            }
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+        }
+
+        function calculateAndDisplay() {
+            const wattage = parseFloat(inputs.wattage.value) || 0;
+            const hoursPerDay = parseFloat(inputs.hoursUsed.value) || 0;
+            const costPerKwh = parseFloat(inputs.kwhCost.value) || 0;
+
+            if (wattage <= 0 || hoursPerDay <= 0 || costPerKwh <= 0) {
+                for (const key in costElements) { costElements[key].textContent = formatCurrency(0); }
+                return;
+            }
+            
+            const kwhPerDay = (wattage * hoursPerDay) / 1000;
+            const costPerDay = kwhPerDay * costPerKwh;
+            
+            costElements.day.textContent = formatCurrency(costPerDay);
+            costElements.week.textContent = formatCurrency(costPerDay * 7);
+            costElements.month.textContent = formatCurrency(costPerDay * 30.4375); // Average days in a month
+            costElements.year.textContent = formatCurrency(costPerDay * 365.25); // Average days in a year
+
+            saveState();
+        }
+        
+        // --- Event Handlers ---
+        for (const key in inputs) {
+            inputs[key].addEventListener('input', calculateAndDisplay);
+        }
+        
+        inputs.hoursUsed.addEventListener('input', () => {
+            hoursSlider.value = inputs.hoursUsed.value;
+        });
+        hoursSlider.addEventListener('input', () => {
+            inputs.hoursUsed.value = hoursSlider.value;
+            calculateAndDisplay();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            if(confirm('Are you sure you want to reset your saved data?')) {
+                localStorage.removeItem(STORAGE_KEY);
+                // Reset to default values and reload
+                location.reload();
+            }
+        });
+        
+        // --- Initial Load ---
+        loadState();
+        calculateAndDisplay();
+    });
+    </script>
+</body>
+</html>
