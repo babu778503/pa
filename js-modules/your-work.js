@@ -1,11 +1,10 @@
-// --- NEW FILE for Code Splitting ---
+import DOMPurify from 'dompurify';
 
-// This function needs access to the global state, so we pass it in.
 export function renderYourWorkView(yourWorkView, activeAlarms, calendarDisplayDate) {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startOfView = new Date(calendarDisplayDate);
-    startOfView.setDate(calendarDisplayDate.getDate() - 2); 
+    startOfView.setDate(calendarDisplayDate.getDate() - 2);
     startOfView.setHours(0, 0, 0, 0);
     const endOfView = new Date(startOfView);
     endOfView.setDate(startOfView.getDate() + 5);
@@ -31,10 +30,10 @@ export function renderYourWorkView(yourWorkView, activeAlarms, calendarDisplayDa
     Object.entries(activeAlarms).forEach(([alarmId, alarm]) => {
         if (alarm.triggered && alarm.frequency === 'one-time') return;
         let occurrence = new Date(alarm.startTime);
-        const searchStart = new Date(startOfView.getTime() - 31 * 24*60*60*1000);
+        const searchStart = new Date(startOfView.getTime() - 31 * 24 * 60 * 60 * 1000);
         if (occurrence > endOfView) return;
         if (occurrence < searchStart && alarm.frequency !== 'one-time') {
-             while(occurrence < searchStart) {
+            while (occurrence < searchStart) {
                 const nextOccurrence = getNextOccurrence(occurrence, alarm.frequency, alarm.startTime);
                 if (!nextOccurrence || nextOccurrence <= occurrence) break;
                 occurrence = nextOccurrence;
@@ -44,7 +43,7 @@ export function renderYourWorkView(yourWorkView, activeAlarms, calendarDisplayDa
             if (occurrence >= startOfView) { allEvents.push({ alarmId, date: new Date(occurrence), name: alarm.toolName, toolId: alarm.toolId, isCompleted: occurrence.getTime() < now.getTime() }); }
             if (alarm.frequency === 'one-time') break;
             const nextOccurrence = getNextOccurrence(occurrence, alarm.frequency, alarm.startTime);
-            if (!nextOccurrence || nextOccurrence <= occurrence) break; 
+            if (!nextOccurrence || nextOccurrence <= occurrence) break;
             occurrence = nextOccurrence;
         }
     });
@@ -57,7 +56,7 @@ export function renderYourWorkView(yourWorkView, activeAlarms, calendarDisplayDa
         const fullDateStr = day.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         const isTodayClass = day.getTime() === today.getTime() ? 'is-today' : '';
         const isActiveDateClass = day.getTime() === new Date(calendarDisplayDate.getFullYear(), calendarDisplayDate.getMonth(), calendarDisplayDate.getDate()).getTime() ? 'is-active-date' : '';
-        const eventsForDay = allEvents.filter(event => event.date.getFullYear() === day.getFullYear() && event.date.getMonth() === day.getMonth() && event.date.getDate() === day.getDate()).sort((a,b) => a.date - b.date);
+        const eventsForDay = allEvents.filter(event => event.date.getFullYear() === day.getFullYear() && event.date.getMonth() === day.getMonth() && event.date.getDate() === day.getDate()).sort((a, b) => a.date - b.date);
         const isEmptyClass = eventsForDay.length === 0 ? 'is-empty' : '';
         let eventsHtml = eventsForDay.map(event => `<div class="calendar-event ${event.isCompleted ? 'is-completed' : ''}" data-tool-id="${event.toolId}" data-tool-name="${DOMPurify.sanitize(event.name)}" title="${DOMPurify.sanitize(event.name)}"><span class="event-text-wrapper">${DOMPurify.sanitize(event.name)}</span><button class="delete-event-btn" data-alarm-id="${event.alarmId}">&times;</button></div>`).join('');
         calendarHtml += `<div class="calendar-day ${isTodayClass} ${isActiveDateClass} ${isEmptyClass}"><div class="mobile-event-sidebar"><span>My Work (task)</span></div><div class="mobile-event-main-content"><div class="calendar-day-full-date">${fullDateStr}</div><div class="calendar-day-header"><span class="day-name">${dayName}</span><span class="day-number">${dayDate}</span></div><div class="calendar-events-container">${eventsHtml}</div></div></div>`;
