@@ -43,22 +43,20 @@
     <!-- PERFORMANCE: Asynchronously load the full stylesheet without blocking rendering -->
     <link rel="preload" href="/assets/css/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="/assets/css/styles.css"></noscript>
+
+    <!-- FIXED: Use an importmap to make DOMPurify available to our JS module -->
+    <script type="importmap">
+    {
+      "imports": {
+        "dompurify": "https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"
+      }
+    }
+    </script>
 </head>
 <body>
-    <!-- FIXED: Updated image path to self-hosted asset -->
     <div id="mobile-top-banner-ad-rotator">
-        <a href="#link3" target="_blank" class="banner-link-wrapper active" aria-label="Meet our team now">
-            <div class="banner banner-3" style="background-image: url('/assets/images/mobile-banner.jpg');">
-                <div class="overlay">
-                    <h2 class="blinking-text">MEET OUR TEAM NOW</h2>
-                    <p class="blinking-text">To grow your business</p>
-                </div>
-            </div>
-        </a>
-        <!-- Other banners... -->
+        <!-- ... all banner content ... -->
     </div>
-    
-    <!-- The rest of your body HTML remains the same -->
     <header class="main-header">
         <!-- ... header content ... -->
     </header>
@@ -71,10 +69,7 @@
 
     <audio id="alarm-sound" src="https://cdn.jsdelivr.net/npm/ion-sound@3.0.7/sounds/bell_ring.mp3" preload="auto"></audio>
     
-    <!-- SECURITY: Load DOMPurify library for safe HTML sanitization -->
-    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
-
-    <!-- FIXED: Load app.js as a module to enable dynamic imports -->
+    <!-- FIXED: The old DOMPurify script is GONE. app.js is now a module that imports it. -->
     <script type="module" src="/app.js" defer></script>
 </body>
 </html>
