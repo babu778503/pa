@@ -44,7 +44,7 @@
     <link rel="preload" href="/assets/css/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="/assets/css/styles.css"></noscript>
 
-    <!-- FIXED: Use an importmap to make DOMPurify available to our JS module -->
+    <!-- FIXED: Use an importmap to make DOMPurify available to our JS modules -->
     <script type="importmap">
     {
       "imports": {
@@ -54,22 +54,38 @@
     </script>
 </head>
 <body>
-    <div id="mobile-top-banner-ad-rotator">
-        <!-- ... all banner content ... -->
-    </div>
+    <div id="mobile-top-banner-ad-rotator"><a href="#link1" target="_blank" class="banner-link-wrapper active" aria-label="Audit and Assurance Consulting"><div class="banner banner-1"><div class="text"><h2 class="blinking-text">AUDIT AND ASSURANCE</h2></div><div class="logo-container"><div class="logo-icon"><div class="bar bar1"></div> <div class="bar bar2"></div> <div class="bar bar3"></div></div><div class="logo-text blinking-text">Financial<br>Consulting</div></div></div></a><a href="#link2" target="_blank" class="banner-link-wrapper" aria-label="Join with us for your dream"><div class="banner banner-2"><div class="text"><h2 class="blinking-text">Join For Your Dream</h2></div><div class="cta-button"><span class="blinking-text">More Info</span> <span class="arrow">&gt;</span></div></div></a><a href="#link3" target="_blank" class="banner-link-wrapper" aria-label="Meet our team now"><div class="banner banner-3"><div class="overlay"><h2 class="blinking-text">MEET OUR TEAM NOW</h2><p class="blinking-text">To grow your business</p></div></div></a><a href="#link4" target="_blank" class="banner-link-wrapper" aria-label="Why not start now"><div class="banner banner-4"><div class="overlay"><h2 class="blinking-text">WHY NOT START NOW</h2></div></div></a><a href="#link5" target="_blank" class="banner-link-wrapper" aria-label="Eat healthy, order now"><div class="banner banner-5"><div class="content"><div class="leaf-icon"><svg viewBox="0 0 24 24"><path d="M17,8C8,10,5.9,16.17,3.82,21.34L5.71,22L6.66,19.7C7.14,19.87,7.64,20,8,20C19,20,22,3,22,3C21,5,19,7,17,8Z" /></svg></div><div class="text-container"><h2 class="blinking-text">Eat healthy.</h2></div></div></div></a><a href="#link6" target="_blank" class="banner-link-wrapper" aria-label="Grow your business with Ginyard International Co."><div class="banner banner-6"><h2 class="blinking-text">GROW YOUR BUSINESS</h2><div class="logo blinking-text">Ginyard International</div></div></a></div>
     <header class="main-header">
-        <!-- ... header content ... -->
+        <div class="container">
+            <a href="/" class="logo"><img src="/logo.webp" alt="ToolHub Logo" width="36" height="36"> ToolHub Free</a>
+            <div class="marquee-container"><div class="marquee-text"><div class="stat-pill pill-blue"><i class="fas fa-tools"></i> 50,000+ Total Tools</div><div class="stat-pill pill-green"><i class="fas fa-plus-circle"></i> 300 New Tools Daily</div><div class="stat-pill pill-purple"><i class="fas fa-users"></i> 2.5M+ Monthly Users</div><div class="stat-pill pill-orange"><i class="fas fa-folder-open"></i> 120+ Categories</div><div class="stat-pill pill-blue"><i class="fas fa-tools"></i> 50,000+ Total Tools</div><div class="stat-pill pill-green"><i class="fas fa-plus-circle"></i> 300 New Tools Daily</div><div class="stat-pill pill-purple"><i class="fas fa-users"></i> 2.5M+ Monthly Users</div><div class="stat-pill pill-orange"><i class="fas fa-folder-open"></i> 120+ Categories</div></div></div>
+            <nav class="main-nav" id="main-nav"><a href="/" class="active" data-view="home"><i class="fas fa-home"></i> Home</a><a href="/categories" data-view="categories"><i class="fas fa-list"></i> Categories</a><a href="/popular" data-view="popular"><i class="fas fa-star"></i> Popular</a><a href="/your-tools" data-view="your-tools"><i class="fas fa-bookmark"></i> My Tools</a><a href="/your-work" data-view="your-work"><i class="fas fa-briefcase"></i> My Work <span id="your-work-badge" class="nav-badge"></span></a><a href="#" id="profile-link" data-view="profile"><i class="fas fa-user-circle"></i> Profile</a></nav>
+            <button class="hamburger-menu" id="hamburger-menu" aria-label="Toggle navigation"><i class="fas fa-bars"></i></button>
+        </div>
     </header>
     <div class="body-wrapper">
-        <!-- ... body wrapper content ... -->
+        <aside class="sidebar-ad left-sidebar"></aside>
+        <main>
+            <div id="tool-viewer-container" class="sub-view-container" style="display: none;"></div>
+            <div id="category-tools-view" class="sub-view-container" style="display: none;"></div>
+            <div id="main-content-wrapper">
+                <section class="hero page-section" data-view-group="home"><div class="container"><h1 style="position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;">ToolHub Free: Over 50,000 Free Online Tools</h1><div class="search-bar"><input type="text" id="searchInput" placeholder="🔎 Search over 50,000 tools..."></div></div></section>
+                <section class="tools-section page-section" id="search-results-view" data-view-group="search" style="display: none; background-color: #fff;"><div class="container"><h2 id="search-results-heading"></h2><div class="tool-grid" id="search-results-grid"></div></div></section>
+                <section class="tools-section page-section" id="popular-tools-section" data-view-group="home popular"><div class="container"><h2><i class="fas fa-star" style="color:#f59e0b;"></i> Popular Tools</h2><div class="tool-grid" id="popular-tools-grid"></div></div></section>
+                <section class="tools-section page-section" id="new-tools-section" data-view-group="home" style="background-color: #fff;"><div class="container"><h2><i class="fas fa-bolt" style="color:#7c3aed;"></i> New Tools Added Today</h2><div class="tool-grid" id="new-tools-grid"></div></div></section>
+                <section class="view-section page-section" id="categories-view" data-view-group="categories" style="display: none;"></section>
+                <section class="view-section page-section" id="your-tools-view" data-view-group="your-tools" style="display: none;"></section>
+                <section class="view-section page-section your-work-view" id="your-work-view" data-view-group="your-work" style="display: none;"></section>
+            </div>
+        </main>
+        <aside class="sidebar-ad right-sidebar"></aside>
     </div>
-    <footer class="main-footer">
-        <!-- ... footer content ... -->
-    </footer>
-
+    <div class="modal-overlay" id="signInModal"><div class="modal-content"><button class="modal-close" id="modalCloseBtn" aria-label="Close modal">&times;</button><h3><i class="fas fa-exclamation-triangle"></i> Guest User Limit Reached</h3><p>You can only save up to 20 bookmarks as a guest.</p><h4>Sign in to unlock more features:</h4><ul class="modal-benefits"><li><i class="fas fa-check-circle"></i> Unlimited bookmarks</li><li><i class="fas fa-check-circle"></i> Cloud sync with Google Drive</li><li><i class="fas fa-check-circle"></i> Access across all your devices</li><li><i class="fas fa-check-circle"></i> Create and save tool collections</li></ul><button class="google-signin-btn"><img src="/google-logo.svg" alt="Google logo"> Sign In with Google</button></div></div>
+    <div class="modal-overlay" id="profileSignInModal"><div class="modal-content"><button class="modal-close" id="profileModalCloseBtn" aria-label="Close modal">&times;</button><h3><i class="fas fa-user-circle"></i> Sign In to Your Profile</h3><p>Sign in with Google to sync your bookmarks, reminders, and work across devices.</p><div id="g_id_signin" style="display: flex; justify-content: center; margin-top: 1.5rem;"></div></div></div>
+    <div class="modal-overlay" id="datePickerModal"><div class="modal-content date-picker-modal-content"><h3 class="blinking-modal-title">My Work & Set Reminder</h3><div class="picker-headers"><span class="picker-header" id="month-header">Mo</span><span class="picker-header" id="day-header">Dat</span><span class="picker-header" id="year-header">Ye</span><span class="picker-header" id="hour-header">Ho</span><span class="picker-header" id="colon-header"></span><span class="picker-header" id="minute-header">Mi</span><span class="picker-header" id="ampm-header">AM/PM</span></div><div class="picker-container"><div class="picker-column" id="month-picker"></div><div class="picker-column" id="day-picker"></div><div class="picker-column" id="year-picker"></div><div class="picker-column" id="hour-picker"></div><div class="picker-colon">:</div><div class="picker-column" id="minute-picker"></div><div class="picker-column" id="ampm-picker"></div></div><select id="reminderFrequencyMobile" class="mobile-frequency-selector"><option value="one-time">One time</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select><div class="modal-actions"><button class="modal-action-btn" id="datePickerClear">Reset</button><button class="modal-action-btn" id="datePickerCancel">Cancel</button><button class="modal-action-btn" id="datePickerSet">Set</button></div></div></div>
+    <footer class="main-footer"><div class="container"><p class="footer-copyright">&copy; <span id="copyright-year"></span> ToolHub Free</p><nav class="footer-links-bottom"></nav></div></footer>
     <audio id="alarm-sound" src="https://cdn.jsdelivr.net/npm/ion-sound@3.0.7/sounds/bell_ring.mp3" preload="auto"></audio>
     
-    <!-- FIXED: The old DOMPurify script is GONE. app.js is now a module that imports it. -->
     <script type="module" src="/app.js" defer></script>
 </body>
 </html>
