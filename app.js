@@ -1,6 +1,6 @@
-import DOMPurify from 'dompurify';
-
 document.addEventListener('DOMContentLoaded', () => {
+    // NOTE: The `import DOMPurify from 'dompurify';` line has been removed from the top.
+    
     const GOOGLE_CLIENT_ID = '208793911052-4eeuooehop93nmjdbc672vlk0am737bf.apps.googleusercontent.com';
     let toolsData = [];
     const mainContentWrapper = document.getElementById('main-content-wrapper');
@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const hamburgerMenu = document.getElementById('hamburger-menu');
     const mainNav = document.getElementById('main-nav');
     const navLinks = mainNav.querySelectorAll('a[data-view]');
-    const footerLinks = document.querySelectorAll('.footer-links-bottom a[data-view]');
     const logoLink = document.querySelector('.logo');
     const signInModal = document.getElementById('signInModal');
     const modalCloseBtn = document.getElementById('modalCloseBtn');
@@ -40,7 +39,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileSignInModal = document.getElementById('profileSignInModal');
     const profileModalCloseBtn = document.getElementById('profileModalCloseBtn');
     let userProfile = null;
-    const sanitizeHTML = (str) => DOMPurify.sanitize(str);
+    
+    // FIXED: Accesses DOMPurify from the global window object.
+    const sanitizeHTML = (str) => {
+        if (typeof DOMPurify === 'undefined') {
+            console.warn('DOMPurify not loaded, returning plain text.');
+            const temp = document.createElement('div');
+            temp.textContent = str;
+            return temp.innerHTML;
+        }
+        return DOMPurify.sanitize(str);
+    };
+
     const unlockAudio = () => { alarmSound.play().catch(() => {}); alarmSound.pause(); alarmSound.currentTime = 0; };
     document.body.addEventListener('click', unlockAudio, { once: true });
     const saveBookmarks = () => localStorage.setItem('toolHubBookmarks', JSON.stringify(bookmarks));
@@ -96,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.onload = function () {
         if (typeof google === 'undefined') {
-            console.warn("Google Identity Services script not loaded.");
             return;
         }
         google.accounts.id.initialize({
@@ -191,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (view === 'your-work') {
             try {
-                yourWorkView.innerHTML = `<div class="iframe-loader"></div>`; // Show loader
+                yourWorkView.innerHTML = `<div class="iframe-loader"></div>`;
                 const { renderYourWorkView } = await import('./js-modules/your-work.js');
                 renderYourWorkView(document.getElementById('your-work-view'), activeAlarms, calendarDisplayDate);
             } catch (error) {
@@ -213,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         saveAlarms(); updateYourWorkBadge();
         if (currentView === 'your-tools') renderYourToolsView(); 
-        if (currentView === 'your-work') switchView('your-work'); // Reload view
+        if (currentView === 'your-work') switchView('your-work');
     };
     const setAlarmWithDate = (toolId, toolName, scheduledDate, frequency) => {
         const scheduledTime = scheduledDate.getTime();
@@ -302,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else { alert('An error occurred. Please try again.'); }
         };
         
-        datePickerElements.set.onclick = setHandler; // Use onclick to replace any old listeners
+        datePickerElements.set.onclick = setHandler;
         datePickerElements.cancel.onclick = hideDatePickerModal;
         datePickerElements.clear.onclick = () => { if(datePickerModal.dataset.toolId && datePickerModal.dataset.toolName) { showDatePickerModal(datePickerModal.dataset.toolId, datePickerModal.dataset.toolName); } };
         datePickerModal.onclick = (e) => { if(e.target === datePickerModal) hideDatePickerModal(); };
