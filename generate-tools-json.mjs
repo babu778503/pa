@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { parse } from 'node-html-parser'; // --- CHANGED: Using a proper HTML parser
+import { parse } from 'node-html-parser';
 
 const toolsDir = 'tools';
 const outputFile = 'tools.json';
@@ -24,11 +24,9 @@ try {
         const filePath = path.join(toolsDir, file);
         const content = fs.readFileSync(filePath, 'utf-8');
         
-        // --- FIXED: Use a robust parser for the title
         const root = parse(content);
         const name = root.querySelector('title')?.text.trim() || 'Unnamed Tool';
 
-        // Keep using a simple regex for the very specific comment format
         const categoryMatch = content.match(/<!--\s*Category:\s*(.*?)\s*-->/i);
         const category = categoryMatch ? categoryMatch[1].trim() : 'Utility';
 
