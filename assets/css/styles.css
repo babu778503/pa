@@ -13,7 +13,6 @@
 }
 
 .blinking-text {
-    /* Replaced aggressive blinking with a subtle color fade */
     animation: subtle-color-fade 5s linear infinite;
 }
 
