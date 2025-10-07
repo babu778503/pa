@@ -1,0 +1,11 @@
+# Node.js dependencies
+# These are installed automatically during the build process on Cloudflare
+node_modules/
+
+# Generated file
+# This file is created by the build script, so we don't need to store it in Git
+tools.json
+
+# Operating System generated files
+.DS_Store
+Thumbs.db
