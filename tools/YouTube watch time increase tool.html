@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<!-- Category: YouTube watch time increase tool -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>YouTube watch time increase tool</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="A mobile-optimized tool to boost YouTube watch time with a 20-viewer display, master playback controls, and quality settings, designed for on-the-go use.">
+    <meta name="keywords" content="mobile youtube tool, YouTube watch time increase, YouTube multi-viewer, 20 viewers, 4000 watch hours, mobile video booster, toolshub365">
+    <meta name="author" content="toolshub365.com">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://toolshub365.com/youtube-watch-time-increase-tool-mobile  ">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="YouTube watch time increase tool - Mobile Edition">
+    <meta property="og:description" content="The advanced multi-viewer, redesigned for a seamless mobile experience. Control up to 20 viewers from your phone.">
+    <meta property="og:url" content="https://toolshub365.com/youtube-watch-time-increase-tool-mobile  ">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="toolshub365.com">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com  ">
+    <link rel="preconnect" href="https://fonts.gstatic.com  " crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #ff0000;
+            --primary-hover-color: #e60000;
+            --secondary-color: #282828;
+            --background-color: #121212;
+            --font-color: #ffffff;
+            --container-bg-color: #1e1e1e;
+            --input-bg-color: #333;
+            --border-color: #444;
+            --success-color: #28a745;
+            --icon-color: #e0e0e0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--font-color);
+            padding-top: 50px;
+        }
+
+        /* Header */
+        header {
+            height: 50px; width: 100%; background-color: var(--secondary-color);
+            display: flex; align-items: center; justify-content: center;
+            position: fixed; top: 0; left: 0; z-index: 1000;
+            border-bottom: 2px solid var(--primary-color);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        header h1 { font-size: 1.2rem; font-weight: 500; }
+
+        /* Main Layout - Mobile First */
+        .main-container {
+            padding: 10px;
+        }
+
+        /* Control Panel - Single Column Layout */
+        .control-panel {
+            padding: 15px; background-color: var(--container-bg-color);
+            border-radius: 8px; margin-bottom: 20px;
+            display: flex; flex-direction: column; gap: 20px;
+        }
+        
+        .control-row { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+        }
+        .control-section { display: flex; flex-direction: column; gap: 8px; }
+        .control-section label { font-size: 0.9rem; color: #ccc; font-weight: 500; }
+
+        .form-input, .form-select {
+            width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 5px;
+            background-color: var(--input-bg-color); color: var(--font-color); font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .form-input:focus, .form-select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 5px rgba(255, 0, 0, 0.5); }
+        input[type="number"] { -moz-appearance: textfield; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .slider-group { display: flex; align-items: center; gap: 15px; }
+        #viewer-count-label { font-weight: 600; font-size: 1.1rem; color: var(--primary-color); }
+
+        .btn-group { display: flex; gap: 10px; }
+        .btn {
+            width: 100%; padding: 12px 15px; border: none; border-radius: 5px;
+            color: var(--font-color); font-size: 0.9rem; font-weight: 500;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: background-color 0.3s;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { background-color: #555; cursor: not-allowed; opacity: 0.6; }
+        .btn svg { width: 18px; height: 18px; fill: var(--icon-color); }
+        .btn-primary { background-color: var(--primary-color); }
+        .btn-secondary { background-color: var(--secondary-color); border: 1px solid var(--border-color); }
+        
+        /* Grid Area */
+        .grid-header {
+            padding: 10px; margin-bottom: 15px; background-color: var(--container-bg-color);
+            border-radius: 8px; font-size: 0.8rem; color: #ccc;
+        }
+        #session-info, #active-viewers { text-align: center; }
+        #session-info span, #active-viewers span { font-weight: 600; color: var(--font-color); }
+        #active-viewers span { color: var(--primary-color); }
+
+        #multi-viewer-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .viewer-instance {
+            position: relative; width: 100%; padding-bottom: 56.25%; height: 0;
+            background-color: #000; border-radius: 6px; overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        .viewer-instance iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+        /* Player Overlay */
+        .player-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4); opacity: 0;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: opacity 0.3s;
+        }
+        .viewer-instance:hover .player-overlay, .viewer-instance:focus-within .player-overlay { opacity: 1; }
+        .overlay-btn {
+            background: rgba(40, 40, 40, 0.8); border: 1px solid var(--border-color);
+            border-radius: 50%; width: 36px; height: 36px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .overlay-btn svg { width: 18px; height: 18px; fill: var(--icon-color); }
+
+        /* Loading / Placeholder */
+        #grid-placeholder {
+            grid-column: 1 / -1; text-align: center; padding: 40px 20px;
+            color: #888; border: 2px dashed var(--border-color); border-radius: 8px;
+        }
+        #grid-placeholder h3 { margin-bottom: 10px; font-size: 1rem; }
+        #grid-placeholder p { font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <!-- SVG Icons Definition -->
+    <svg width="0" height="0" style="position:absolute">
+      <defs>
+        <symbol id="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol>
+        <symbol id="icon-pause" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></symbol>
+        <symbol id="icon-sync" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></symbol>
+        <symbol id="icon-mute" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></symbol>
+        <symbol id="icon-unmute" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></symbol>
+        <symbol id="icon-reload" viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></symbol>
+      </defs>
+    </svg>
+
+    <header>
+        <h1>YouTube watch time increase tool</h1>
+    </header>
+
+    <main class="main-container">
+        <!-- Main Controls -->
+        <section class="control-panel">
+            <div class="control-row">
+                <div class="control-section">
+                    <label for="video-url-input">YouTube Video URL</label>
+                    <div class="btn-group">
+                        <input type="text" id="video-url-input" class="form-input" placeholder="Enter video URL...">
+                    </div>
+                     <button id="load-video-btn" class="btn btn-primary">Load Video</button>
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="control-section">
+                    <label for="viewer-count-slider">Number of Viewers</label>
+                    <div class="slider-group">
+                        <input type="range" id="viewer-count-slider" class="form-input" min="1" max="20" value="20">
+                        <span id="viewer-count-label">20</span>
+                    </div>
+                </div>
+                <div class="control-section">
+                    <label for="start-time-input">Start Time (seconds)</label>
+                    <input type="number" id="start-time-input" class="form-input" min="0" value="0">
+                </div>
+                <div class="control-section">
+                    <label for="quality-select">Playback Quality</label>
+                    <select id="quality-select" class="form-select">
+                        <option value="auto">Auto</option>
+                        <option value="small">Low (240p)</option>
+                        <option value="medium">Medium (480p)</option>
+                    </select>
+                </div>
+                <div class="control-section">
+                    <label>Master Playback</label>
+                    <div class="btn-group">
+                        <button id="play-all-btn" class="btn btn-secondary" title="Play All"><svg><use xlink:href="#icon-play"/></svg></button>
+                        <button id="pause-all-btn" class="btn btn-secondary" title="Pause All"><svg><use xlink:href="#icon-pause"/></svg></button>
+                        <button id="mute-all-btn" class="btn btn-secondary" title="Mute/Unmute All"><svg><use xlink:href="#icon-unmute"/></svg></button>
+                        <button id="resync-all-btn" class="btn btn-secondary" title="Resync All"><svg><use xlink:href="#icon-sync"/></svg></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Session & Grid Area -->
+        <section id="session-display" style="display: none;">
+             <div class="grid-header">
+                <div>
+                    <div id="session-info">Now Playing: <span>N/A</span></div>
+                    <div id="active-viewers">Active Viewers: <span>0</span></div>
+                </div>
+            </div>
+        </section>
+       
+        <section id="multi-viewer-grid">
+            <div id="grid-placeholder">
+                <h3>Mobile Multi-Viewer</h3>
+                <p>Configure your session above and click "Load" to begin.</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // --- YouTube IFrame API Setup ---
+        const tag = document.createElement('script');
+        tag.src = "  https://www.youtube.com/iframe_api  ";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        
+        function onYouTubeIframeAPIReady() {
+            appState.isApiReady = true;
+            // Enable master controls as soon as API is ready
+            updateMasterControls(true);
+        }
+
+        // --- DOM Elements ---
+        const elements = {
+            videoUrlInput: document.getElementById('video-url-input'),
+            loadVideoBtn: document.getElementById('load-video-btn'),
+            viewerCountSlider: document.getElementById('viewer-count-slider'),
+            viewerCountLabel: document.getElementById('viewer-count-label'),
+            startTimeInput: document.getElementById('start-time-input'),
+            qualitySelect: document.getElementById('quality-select'),
+            playAllBtn: document.getElementById('play-all-btn'),
+            pauseAllBtn: document.getElementById('pause-all-btn'),
+            muteAllBtn: document.getElementById('mute-all-btn'),
+            resyncAllBtn: document.getElementById('resync-all-btn'),
+            sessionDisplay: document.getElementById('session-display'),
+            sessionInfo: document.getElementById('session-info').querySelector('span'),
+            activeViewers: document.getElementById('active-viewers').querySelector('span'),
+            grid: document.getElementById('multi-viewer-grid'),
+        };
+
+        // --- App State ---
+        let appState = {
+            isApiReady: false, activeVideoId: null, players: [], isMuted: false, // Changed default to false for unmuted
+        };
+        const SETTINGS_KEY = 'ytMultiViewerSettingsMobile';
+
+        // --- Core Functions ---
+        function loadVideosInGrid() {
+            if (!appState.isApiReady || !appState.activeVideoId) return;
+
+            appState.players.forEach(p => p.destroy());
+            appState.players = [];
+            elements.grid.innerHTML = `<div id="grid-placeholder"><h3>Loading Players...</h3><p>Please wait.</p></div>`;
+            // Disable master controls only during the loading phase *after* a video is requested
+            updateMasterControls(false); 
+
+            const viewerCount = parseInt(elements.viewerCountSlider.value, 10);
+            const startTime = parseInt(elements.startTimeInput.value, 10) || 0;
+            const quality = elements.qualitySelect.value;
+            
+            elements.sessionDisplay.style.display = 'block';
+            elements.sessionInfo.textContent = appState.activeVideoId;
+            elements.activeViewers.textContent = viewerCount;
+
+            setTimeout(() => { 
+                elements.grid.innerHTML = '';
+                for (let i = 0; i < viewerCount; i++) {
+                    const playerWrapper = document.createElement('div');
+                    playerWrapper.className = 'viewer-instance';
+                    const playerId = `player-${i}`;
+                    
+                    playerWrapper.innerHTML = `
+                        <div id="${playerId}"></div>
+                        <div class="player-overlay">
+                            <button class="overlay-btn mute-toggle-btn" data-index="${i}" title="Mute/Unmute">
+                                <svg class="mute-icon"><use xlink:href="#icon-unmute"/></svg> <!-- Changed default icon to unmute -->
+                            </button>
+                            <button class="overlay-btn reload-btn" data-index="${i}" title="Reload Video">
+                                <svg><use xlink:href="#icon-reload"/></svg>
+                            </button>
+                        </div>
+                    `;
+                    elements.grid.appendChild(playerWrapper);
+
+                    const player = new YT.Player(playerId, {
+                        height: '100%', width: '100%', videoId: appState.activeVideoId,
+                        playerVars: {
+                            'playsinline': 1,
+                            // 'autoplay': 0, // Removed autoplay: 0 to allow initial play
+                            'controls': 0, 'loop': 1,
+                            'playlist': appState.activeVideoId,
+                            'mute': 0, // Changed mute: 1 to mute: 0 for initial unmuted state
+                            'start': startTime,
+                        },
+                        events: { 'onReady': (event) => onPlayerReady(event, quality) }
+                    });
+                    appState.players.push(player);
+                }
+                attachOverlayListeners();
+                // Re-enable master controls after players are created and attached
+                updateMasterControls(true);
+            }, 100);
+        }
+
+        function onPlayerReady(event, quality) {
+            if (quality !== 'auto') event.target.setPlaybackQuality(quality);
+            // Potentially re-enable if all players are ready, though updateMasterControls(true) is called after creation anyway
+            // if (appState.playersReadyCount === parseInt(elements.viewerCountSlider.value, 10)) {
+            //     // updateMasterControls(true); // This line might be redundant now, but kept for safety if needed elsewhere
+            // }
+        }
+
+        // --- Event Handlers ---
+        function handleLoadVideoClick() {
+            const url = elements.videoUrlInput.value.trim();
+            const videoId = extractVideoID(url);
+            if (videoId) {
+                appState.activeVideoId = videoId;
+                saveSettings();
+                loadVideosInGrid();
+            } else {
+                alert('Invalid YouTube URL. Please check and try again.');
+            }
+        }
+        
+        // **FIX:** Rewrote Master Controls with robust for-loops and defensive checks.
+        const masterControls = {
+            play: () => {
+                for (let i = 0; i < appState.players.length; i++) {
+                    const p = appState.players[i];
+                    if (p && typeof p.playVideo === 'function') {
+                        p.playVideo();
+                    }
+                }
+            },
+            pause: () => {
+                for (let i = 0; i < appState.players.length; i++) {
+                    const p = appState.players[i];
+                    if (p && typeof p.pauseVideo === 'function') {
+                        p.pauseVideo();
+                    }
+                }
+            },
+            resync: () => {
+                const startTime = parseInt(elements.startTimeInput.value, 10) || 0;
+                for (let i = 0; i < appState.players.length; i++) {
+                    const p = appState.players[i];
+                    if (p && typeof p.seekTo === 'function' && typeof p.playVideo === 'function') {
+                        p.seekTo(startTime, true);
+                        p.playVideo();
+                    }
+                }
+            },
+            toggleMute: () => {
+                appState.isMuted = !appState.isMuted;
+                const icon = appState.isMuted ? "#icon-mute" : "#icon-unmute"; // Corrected icon logic
+                elements.muteAllBtn.querySelector('use').setAttribute('xlink:href', icon);
+                for (let i = 0; i < appState.players.length; i++) {
+                    const p = appState.players[i];
+                    if (p && typeof p.mute === 'function' && typeof p.unMute === 'function') {
+                        if (appState.isMuted) {
+                            p.mute();
+                        } else {
+                            p.unMute();
+                        }
+                    }
+                }
+            }
+        };
+
+        // Individual Player Controls
+        function attachOverlayListeners() {
+            document.querySelectorAll('.mute-toggle-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    const index = e.currentTarget.dataset.index;
+                    const player = appState.players[index];
+                    const icon = btn.querySelector('.mute-icon use');
+                    if (player.isMuted()) {
+                        player.unMute();
+                        icon.setAttribute('xlink:href', '#icon-unmute');
+                    } else {
+                        player.mute();
+                        icon.setAttribute('xlink:href', '#icon-mute');
+                    }
+                };
+            });
+            document.querySelectorAll('.reload-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    const index = e.currentTarget.dataset.index;
+                    const startTime = parseInt(elements.startTimeInput.value, 10) || 0;
+                    appState.players[index].seekTo(startTime, true);
+                    appState.players[index].playVideo(); // Ensure it plays after seeking
+                };
+            });
+        }
+        
+        // --- UI & State Helpers ---
+        function updateMasterControls(isEnabled) {
+            [elements.playAllBtn, elements.pauseAllBtn, elements.muteAllBtn, elements.resyncAllBtn].forEach(btn => {
+                btn.disabled = !isEnabled;
+            });
+        }
+
+        function extractVideoID(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        // --- Local Storage Persistence ---
+        function saveSettings() {
+            const settings = {
+                url: elements.videoUrlInput.value,
+                viewers: elements.viewerCountSlider.value,
+                quality: elements.qualitySelect.value,
+                startTime: elements.startTimeInput.value
+            };
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        }
+
+        function loadSettings() {
+            const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+            if (settings) {
+                elements.videoUrlInput.value = settings.url || '';
+                elements.viewerCountSlider.value = settings.viewers || 20;
+                elements.viewerCountLabel.textContent = settings.viewers || 20;
+                elements.qualitySelect.value = settings.quality || 'auto';
+                elements.startTimeInput.value = settings.startTime || 0;
+            }
+        }
+
+        // --- Event Listeners Setup ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            // Initialize master controls as enabled on page load
+            updateMasterControls(true);
+            
+            elements.loadVideoBtn.addEventListener('click', handleLoadVideoClick);
+            elements.viewerCountSlider.addEventListener('input', e => elements.viewerCountLabel.textContent = e.target.value);
+            
+            elements.playAllBtn.addEventListener('click', masterControls.play);
+            elements.pauseAllBtn.addEventListener('click', masterControls.pause);
+            elements.muteAllBtn.addEventListener('click', masterControls.toggleMute);
+            elements.resyncAllBtn.addEventListener('click', masterControls.resync);
+        });
+    </script>
+</body>
+</html>
