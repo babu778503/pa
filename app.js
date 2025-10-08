@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const categoriesView = document.getElementById('categories-view');
     const yourToolsView = document.getElementById('your-tools-view');
     const yourWorkView = document.getElementById('your-work-view');
+    const profileView = document.getElementById('profile-view'); // New
     const searchInput = document.getElementById('searchInput');
     const searchResultsView = document.getElementById('search-results-view');
     const searchResultsGrid = document.getElementById('search-results-grid');
@@ -38,12 +39,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileSignInModal = document.getElementById('profileSignInModal');
     const profileModalCloseBtn = document.getElementById('profileModalCloseBtn');
     let userProfile = null;
+    let userPreferences = {}; // New
     const sanitizeHTML = (str) => { if (!str) return ''; const temp = document.createElement('div'); temp.textContent = str; return temp.innerHTML; };
     const unlockAudio = () => { alarmSound.play().catch(() => {}); alarmSound.pause(); alarmSound.currentTime = 0; };
     document.body.addEventListener('click', unlockAudio, { once: true });
     const saveBookmarks = () => localStorage.setItem('toolHubBookmarks', JSON.stringify(bookmarks));
     const saveRecentlyUsed = () => localStorage.setItem('toolHubRecent', JSON.stringify(recentlyUsed));
     const saveAlarms = () => localStorage.setItem('toolHubAlarms', JSON.stringify(activeAlarms));
+    const saveUserPreferences = () => localStorage.setItem('toolHubUserPreferences', JSON.stringify(userPreferences)); // New
 
     function decodeJwtResponse(token) {
         try {
@@ -63,22 +66,33 @@ document.addEventListener('DOMContentLoaded', () => {
         userProfile = decodeJwtResponse(response.credential);
         if (userProfile) {
             localStorage.setItem('toolHubUserProfile', JSON.stringify(userProfile));
+            loadUserPreferences(); // New
             updateUIForLogin();
             profileSignInModal.classList.remove('show');
             alert(`Welcome, ${userProfile.given_name}!`);
         }
     }
     
+    // New: Function to load user preferences from localStorage
+    function loadUserPreferences() {
+        userPreferences = JSON.parse(localStorage.getItem('toolHubUserPreferences')) || {
+            notifications: true,
+            birthday: ''
+        };
+    }
+    
     function updateUIForLogin() {
         if (!userProfile) return;
         profileLink.innerHTML = `<img src="${userProfile.picture}" alt="User profile picture"> ${sanitizeHTML(userProfile.given_name)}`;
-        profileLink.title = `Signed in as ${userProfile.name}. Click to sign out.`;
+        profileLink.title = `Signed in as ${userProfile.name}. Click to view profile.`;
         profileLink.classList.add('logged-in');
     }
 
     function updateUIForLogout() {
         userProfile = null;
+        userPreferences = {}; // New
         localStorage.removeItem('toolHubUserProfile');
+        localStorage.removeItem('toolHubUserPreferences'); // New
         profileLink.innerHTML = `<i class="fas fa-user-circle"></i> Profile`;
         profileLink.title = '';
         profileLink.classList.remove('logged-in');
@@ -89,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
             google.accounts.id.disableAutoSelect();
         }
         updateUIForLogout();
+        switchView('home'); // Redirect to home after signing out
         alert("You have been signed out.");
     }
 
@@ -224,23 +239,63 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         yourWorkView.innerHTML = `<div class="container"><h2><i class="fas fa-briefcase" style="color:#7c3aed;"></i> My Work</h2><div class="your-work-controls"><button id="calendar-today-btn">Today</button><button id="calendar-prev-btn"><i class="fas fa-chevron-left"></i></button><button id="calendar-next-btn"><i class="fas fa-chevron-right"></i></button><span class="your-work-date-range">${formatRange(startOfView, endRangeDate)}</span></div><div class="calendar-container"><div class="calendar-grid">${calendarHtml}</div></div></div>`;
     };
+
+    // New: Function to render the profile page
+    const renderProfileView = () => {
+        if (!userProfile) {
+            profileSignInModal.classList.add('show');
+            switchView('home');
+            return;
+        }
+
+        const checkedAttribute = userPreferences.notifications ? 'checked' : '';
+        profileView.innerHTML = `
+            <div class="container">
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <img src="${userProfile.picture}" alt="User profile avatar" class="profile-avatar">
+                        <h2 class="profile-name">${sanitizeHTML(userProfile.name)}</h2>
+                        <p class="profile-email">${sanitizeHTML(userProfile.email)}</p>
+                    </div>
+                    <div class="profile-form">
+                        <div class="form-group">
+                            <label for="profile-birthday">Birthday</label>
+                            <input type="date" id="profile-birthday" value="${userPreferences.birthday || ''}">
+                        </div>
+                        <div class="form-group form-group-inline">
+                            <label for="notification-toggle">App Notifications</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="notification-toggle" ${checkedAttribute}>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="profile-actions">
+                        <button class="btn-save" id="profile-save-btn">Save Changes</button>
+                        <button class="btn-sign-out" id="profile-sign-out-btn">Sign Out</button>
+                    </div>
+                </div>
+            </div>`;
+    };
+
     const switchView = (view) => {
         if (currentView !== view) { previousView = currentView; }
         currentView = view;
         window.scrollTo({ top: 0, behavior: 'auto' });
-        navLinks.forEach(link => { link.classList.toggle('active', ['home', 'categories', 'popular', 'your-tools', 'your-work'].includes(view) && link.dataset.view === view); });
+        navLinks.forEach(link => { link.classList.toggle('active', ['home', 'categories', 'popular', 'your-tools', 'your-work', 'profile'].includes(view) && link.dataset.view === view); });
         allPageSections.forEach(section => { section.style.display = section.dataset.viewGroup.includes(view) ? '' : 'none'; });
         if (searchInput.value !== '') { searchInput.value = ''; searchInput.dispatchEvent(new Event('input')); }
         hideTool(false); hideCategoryTools();
         if (view === 'categories' && !categoriesView.innerHTML) renderCategoriesView();
         if (view === 'your-tools') renderYourToolsView();
         if (view === 'your-work') renderYourWorkView();
+        if (view === 'profile') renderProfileView(); // New
         if (mainNav.classList.contains('active')) mainNav.classList.remove('active');
     };
     const triggerAlarm = (alarmId) => {
         const alarmData = activeAlarms[alarmId]; if (!alarmData) return;
         if (alarmSound) { alarmSound.play().catch(e => console.error("Error playing sound:", e)); }
-        if (Notification.permission === 'granted') { new Notification('ToolHub Reminder', { body: `Your reminder for "${alarmData.toolName}" is now!`, icon: 'https://img.icons8.com/plasticine/100/000000/alarm-clock.png' }); }
+        if (Notification.permission === 'granted' && userPreferences.notifications) { new Notification('ToolHub Reminder', { body: `Your reminder for "${alarmData.toolName}" is now!`, icon: 'https://img.icons8.com/plasticine/100/000000/alarm-clock.png' }); }
         if (alarmData.frequency === 'one-time') { alarmData.triggered = true; } else {
             const nextDate = getNextOccurrence(new Date(alarmData.nextOccurrence), alarmData.frequency, alarmData.startTime);
             if (nextDate) { alarmData.nextOccurrence = nextDate.getTime(); const delay = alarmData.nextOccurrence - Date.now(); if (delay > 0) { setTimeout(() => triggerAlarm(alarmId), delay); } } else { alarmData.triggered = true; }
@@ -277,7 +332,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (alarmsChanged) { saveAlarms(); }
     };
 
-    // ✅ NEW: Function updated to include a loading spinner
     const createToolViewerHTML = (toolId, toolName) => {
         const saneToolName = sanitizeHTML(toolName);
         return `<div class="container">
@@ -360,12 +414,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Updated: Profile link now navigates to the profile view
     profileLink.addEventListener('click', (e) => {
         e.preventDefault();
         if (userProfile) {
-            if (confirm('Are you sure you want to sign out?')) {
-                signOut();
-            }
+            const view = 'profile';
+            const newPath = `/${view}`;
+            history.pushState({view: view}, '', newPath);
+            switchView(view);
         } else {
             profileSignInModal.classList.add('show');
         }
@@ -390,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             hideTool(false);
-            const validViews = ['home', 'categories', 'popular', 'your-tools', 'your-work'];
+            const validViews = ['home', 'categories', 'popular', 'your-tools', 'your-work', 'profile']; // Updated
             let view = path.substring(1) || 'home';
             if (!validViews.includes(view)) {
                 view = 'home';
@@ -500,6 +556,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (categoryCard) showCategoryTools(categoryCard.dataset.categoryName); 
         if (backToCategoriesBtn) hideCategoryTools();
 
+        // New: Profile Page event handlers
+        if (e.target.id === 'profile-save-btn') {
+            const birthdayInput = document.getElementById('profile-birthday');
+            const notificationsInput = document.getElementById('notification-toggle');
+            userPreferences.birthday = birthdayInput.value;
+            userPreferences.notifications = notificationsInput.checked;
+            saveUserPreferences();
+            alert('Preferences saved!');
+        }
+        if (e.target.id === 'profile-sign-out-btn') {
+            signOut();
+        }
+
         if (currentView === 'your-work') {
             const deleteEventBtn = e.target.closest('.delete-event-btn'); 
             const calendarEvent = e.target.closest('.calendar-event');
@@ -519,13 +588,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ✅ NEW: Prefetching logic added for popular tools
     function initializeApp(data) {
         toolsData = data;
         
         const storedProfile = localStorage.getItem('toolHubUserProfile');
         if (storedProfile) {
             userProfile = JSON.parse(storedProfile);
+            loadUserPreferences(); // New
             updateUIForLogin();
         }
 
@@ -584,7 +653,3 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     loadData();
 });
-
-
-
-
