@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainHeader = document.querySelector('.main-header');
     const hamburgerMenu = document.getElementById('hamburger-menu');
     const mainNav = document.getElementById('main-nav');
-    const navLinks = mainNav.querySelectorAll('a[data-view]');
     const footerLinks = document.querySelectorAll('.footer-links-bottom a[data-view]');
     const logoLink = document.querySelector('.logo');
     const signInModal = document.getElementById('signInModal');
@@ -18,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const categoriesView = document.getElementById('categories-view');
     const yourToolsView = document.getElementById('your-tools-view');
     const yourWorkView = document.getElementById('your-work-view');
-    const profileView = document.getElementById('profile-view'); // New
+    const profileView = document.getElementById('profile-view');
     const searchInput = document.getElementById('searchInput');
     const searchResultsView = document.getElementById('search-results-view');
     const searchResultsGrid = document.getElementById('search-results-grid');
@@ -35,18 +34,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const GUEST_BOOKMARK_LIMIT = 20;
     const RECENTLY_USED_LIMIT = 100;
     let lastScrollTop = 0;
-    const profileLink = document.getElementById('profile-link');
     const profileSignInModal = document.getElementById('profileSignInModal');
     const profileModalCloseBtn = document.getElementById('profileModalCloseBtn');
     let userProfile = null;
-    let userPreferences = {}; // New
+    let userPreferences = {};
     const sanitizeHTML = (str) => { if (!str) return ''; const temp = document.createElement('div'); temp.textContent = str; return temp.innerHTML; };
-    const unlockAudio = () => { alarmSound.play().catch(() => {}); alarmSound.pause(); alarmSound.currentTime = 0; };
+
+    // *** CORRECTED: This function now properly unlocks both audio and speech synthesis ***
+    const unlockAudio = () => {
+        // 1. Unlock the <audio> element for the bell sound
+        alarmSound.play().catch(() => {});
+        alarmSound.pause();
+        alarmSound.currentTime = 0;
+
+        // 2. Prime the speech synthesis engine by playing a silent utterance
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance('');
+            utterance.volume = 0; // Make it inaudible
+            window.speechSynthesis.speak(utterance);
+            // It's good practice to cancel immediately to clear the queue
+            window.speechSynthesis.cancel(); 
+        }
+    };
+    // This listener remains the same and is correct
     document.body.addEventListener('click', unlockAudio, { once: true });
+
     const saveBookmarks = () => localStorage.setItem('toolHubBookmarks', JSON.stringify(bookmarks));
     const saveRecentlyUsed = () => localStorage.setItem('toolHubRecent', JSON.stringify(recentlyUsed));
     const saveAlarms = () => localStorage.setItem('toolHubAlarms', JSON.stringify(activeAlarms));
-    const saveUserPreferences = () => localStorage.setItem('toolHubUserPreferences', JSON.stringify(userPreferences)); // New
+    const saveUserPreferences = () => localStorage.setItem('toolHubUserPreferences', JSON.stringify(userPreferences));
 
     function decodeJwtResponse(token) {
         try {
@@ -66,14 +82,14 @@ document.addEventListener('DOMContentLoaded', () => {
         userProfile = decodeJwtResponse(response.credential);
         if (userProfile) {
             localStorage.setItem('toolHubUserProfile', JSON.stringify(userProfile));
-            loadUserPreferences(); // New
+            loadUserPreferences();
             updateUIForLogin();
             profileSignInModal.classList.remove('show');
             alert(`Welcome, ${userProfile.given_name}!`);
+            switchView('home');
         }
     }
     
-    // New: Function to load user preferences from localStorage
     function loadUserPreferences() {
         userPreferences = JSON.parse(localStorage.getItem('toolHubUserPreferences')) || {
             notifications: true,
@@ -83,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function updateUIForLogin() {
         if (!userProfile) return;
+        const profileLink = document.getElementById('profile-link');
         profileLink.innerHTML = `<img src="${userProfile.picture}" alt="User profile picture"> ${sanitizeHTML(userProfile.given_name)}`;
         profileLink.title = `Signed in as ${userProfile.name}. Click to view profile.`;
         profileLink.classList.add('logged-in');
@@ -90,9 +107,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateUIForLogout() {
         userProfile = null;
-        userPreferences = {}; // New
+        userPreferences = {};
         localStorage.removeItem('toolHubUserProfile');
-        localStorage.removeItem('toolHubUserPreferences'); // New
+        localStorage.removeItem('toolHubUserPreferences');
+        const profileLink = document.getElementById('profile-link');
         profileLink.innerHTML = `<i class="fas fa-user-circle"></i> Profile`;
         profileLink.title = '';
         profileLink.classList.remove('logged-in');
@@ -103,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
             google.accounts.id.disableAutoSelect();
         }
         updateUIForLogout();
-        switchView('home'); // Redirect to home after signing out
+        switchView('home');
         alert("You have been signed out.");
     }
 
@@ -240,7 +258,6 @@ document.addEventListener('DOMContentLoaded', () => {
         yourWorkView.innerHTML = `<div class="container"><h2><i class="fas fa-briefcase" style="color:#7c3aed;"></i> My Work</h2><div class="your-work-controls"><button id="calendar-today-btn">Today</button><button id="calendar-prev-btn"><i class="fas fa-chevron-left"></i></button><button id="calendar-next-btn"><i class="fas fa-chevron-right"></i></button><span class="your-work-date-range">${formatRange(startOfView, endRangeDate)}</span></div><div class="calendar-container"><div class="calendar-grid">${calendarHtml}</div></div></div>`;
     };
 
-    // New: Function to render the profile page
     const renderProfileView = () => {
         if (!userProfile) {
             profileSignInModal.classList.add('show');
@@ -282,19 +299,48 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentView !== view) { previousView = currentView; }
         currentView = view;
         window.scrollTo({ top: 0, behavior: 'auto' });
-        navLinks.forEach(link => { link.classList.toggle('active', ['home', 'categories', 'popular', 'your-tools', 'your-work', 'profile'].includes(view) && link.dataset.view === view); });
-        allPageSections.forEach(section => { section.style.display = section.dataset.viewGroup.includes(view) ? '' : 'none'; });
-        if (searchInput.value !== '') { searchInput.value = ''; searchInput.dispatchEvent(new Event('input')); }
-        hideTool(false); hideCategoryTools();
+        
+        mainNav.querySelectorAll('a[data-view]').forEach(link => {
+            link.classList.toggle('active', link.dataset.view === view);
+        });
+
+        allPageSections.forEach(section => {
+            section.style.display = section.dataset.viewGroup.includes(view) ? '' : 'none';
+        });
+
+        if (searchInput.value !== '') {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+        }
+        hideTool(false);
+        hideCategoryTools();
+        
         if (view === 'categories' && !categoriesView.innerHTML) renderCategoriesView();
         if (view === 'your-tools') renderYourToolsView();
         if (view === 'your-work') renderYourWorkView();
-        if (view === 'profile') renderProfileView(); // New
+        if (view === 'profile') renderProfileView();
+        
         if (mainNav.classList.contains('active')) mainNav.classList.remove('active');
     };
+
+    const triggerPreAlarm = (toolName) => {
+        if (!('speechSynthesis' in window) || !userPreferences.notifications) {
+            return;
+        }
+        const userName = userProfile ? userProfile.given_name : 'there';
+        const message = `Hi ${userName}, you have a reminder for ${toolName} in 15 minutes.`;
+        
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.volume = 1;
+        utterance.rate = 1;
+        utterance.pitch = 1;
+        
+        window.speechSynthesis.speak(utterance);
+    };
+
     const triggerAlarm = (alarmId) => {
         const alarmData = activeAlarms[alarmId]; if (!alarmData) return;
-        if (alarmSound) { alarmSound.play().catch(e => console.error("Error playing sound:", e)); }
+        if (alarmSound && userPreferences.notifications) { alarmSound.play().catch(e => console.error("Error playing sound:", e)); }
         if (Notification.permission === 'granted' && userPreferences.notifications) { new Notification('ToolHub Reminder', { body: `Your reminder for "${alarmData.toolName}" is now!`, icon: 'https://img.icons8.com/plasticine/100/000000/alarm-clock.png' }); }
         if (alarmData.frequency === 'one-time') { alarmData.triggered = true; } else {
             const nextDate = getNextOccurrence(new Date(alarmData.nextOccurrence), alarmData.frequency, alarmData.startTime);
@@ -304,15 +350,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentView === 'your-tools') renderYourToolsView(); 
         if (currentView === 'your-work') renderYourWorkView();
     };
+
     const setAlarmWithDate = (toolId, toolName, scheduledDate, frequency) => {
         const scheduledTime = scheduledDate.getTime();
         if (isNaN(scheduledTime) || scheduledTime <= Date.now()) { alert("Invalid date. The date must be in the future."); return; }
         const alarmId = `${toolId}-${scheduledTime}-${Math.random().toString(36).substr(2, 5)}`;
         activeAlarms[alarmId] = { startTime: scheduledTime, nextOccurrence: scheduledTime, toolName, toolId, frequency: frequency || 'one-time', triggered: false };
         saveAlarms(); updateYourWorkBadge();
+        
         setTimeout(() => triggerAlarm(alarmId), scheduledTime - Date.now());
+
+        const preAlarmTime = scheduledTime - (15 * 60 * 1000);
+        if (preAlarmTime > Date.now()) {
+            const preAlarmDelay = preAlarmTime - Date.now();
+            setTimeout(() => triggerPreAlarm(toolName), preAlarmDelay);
+        }
+
         if (currentView === 'your-tools') renderYourToolsView(); if (currentView === 'your-work') { calendarDisplayDate = new Date(scheduledTime); renderYourWorkView(); }
     };
+
     const loadAndScheduleAlarms = () => {
         const storedAlarms = JSON.parse(localStorage.getItem('toolHubAlarms')) || {};
         const now = Date.now();
@@ -325,8 +381,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 while (nextDate.getTime() < now) { const updatedDate = getNextOccurrence(nextDate, alarm.frequency, alarm.startTime); if (!updatedDate) { nextDate = null; break; } nextDate = updatedDate; }
                 if (nextDate) { alarm.nextOccurrence = nextDate.getTime(); alarmsChanged = true; }
             }
+            
             const remainingTime = alarm.nextOccurrence - now;
-            if (remainingTime > 0 && !(alarm.triggered && alarm.frequency === 'one-time')) { setTimeout(() => triggerAlarm(alarmId), remainingTime); }
+            if (remainingTime > 0 && !(alarm.triggered && alarm.frequency === 'one-time')) {
+                setTimeout(() => triggerAlarm(alarmId), remainingTime);
+
+                const preAlarmTime = alarm.nextOccurrence - (15 * 60 * 1000);
+                if (preAlarmTime > now) {
+                    const preAlarmDelay = preAlarmTime - now;
+                    setTimeout(() => triggerPreAlarm(alarm.toolName), preAlarmDelay);
+                }
+            }
         });
         activeAlarms = storedAlarms;
         if (alarmsChanged) { saveAlarms(); }
@@ -392,14 +457,26 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const handleDataViewClick = (e) => {
         const link = e.target.closest('a[data-view]');
-        if (link && link.id !== 'profile-link') {
-            e.preventDefault();
-            const view = link.dataset.view;
-            const newPath = view === 'home' ? '/' : `/${view}`;
-            history.pushState({view: view}, '', newPath);
-            switchView(view);
+        if (!link) return;
+
+        e.preventDefault();
+        const view = link.dataset.view;
+
+        if (view === 'profile') {
+            if (userProfile) {
+                history.pushState({ view: 'profile' }, '', '/profile');
+                switchView('profile');
+            } else {
+                profileSignInModal.classList.add('show');
+            }
+            return;
         }
+
+        const newPath = view === 'home' ? '/' : `/${view}`;
+        history.pushState({ view: view }, '', newPath);
+        switchView(view);
     };
+
     mainNav.addEventListener('click', handleDataViewClick);
     footerLinks.forEach(link => link.addEventListener('click', handleDataViewClick));
 
@@ -413,19 +490,6 @@ document.addEventListener('DOMContentLoaded', () => {
             profileSignInModal.classList.add('show');
         });
     }
-
-    // Updated: Profile link now navigates to the profile view
-    profileLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (userProfile) {
-            const view = 'profile';
-            const newPath = `/${view}`;
-            history.pushState({view: view}, '', newPath);
-            switchView(view);
-        } else {
-            profileSignInModal.classList.add('show');
-        }
-    });
 
     profileModalCloseBtn.addEventListener('click', () => profileSignInModal.classList.remove('show'));
     profileSignInModal.addEventListener('click', (e) => {
@@ -446,7 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             hideTool(false);
-            const validViews = ['home', 'categories', 'popular', 'your-tools', 'your-work', 'profile']; // Updated
+            const validViews = ['home', 'categories', 'popular', 'your-tools', 'your-work', 'profile'];
             let view = path.substring(1) || 'home';
             if (!validViews.includes(view)) {
                 view = 'home';
@@ -541,6 +605,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const { toolId, toolTitle } = button.dataset; const url = `${window.location.origin}/tool/${toolId}`; const shareData = { title: `Check out: ${toolTitle}`, text: `I found a great free tool on ToolHub: ${toolTitle}`, url };
         try { await navigator.share(shareData); } catch (err) { try { await navigator.clipboard.writeText(url); const originalIcon = button.innerHTML; button.innerHTML = '<i class="fas fa-check"></i>'; setTimeout(() => { button.innerHTML = originalIcon; }, 2000); } catch (err) { alert('Could not copy URL. Please copy it manually: ' + url); } }
     };
+
     document.body.addEventListener('click', (e) => {
         const openBtn = e.target.closest('.btn-open'); const bookmarkBtn = e.target.closest('.btn-bookmark'); const shareBtn = e.target.closest('.btn-share'); const backBtn = e.target.closest('#back-to-tools-btn'); const categoryCard = e.target.closest('.category-card'); const backToCategoriesBtn = e.target.closest('#back-to-categories-btn');
         if (openBtn) { 
@@ -556,7 +621,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (categoryCard) showCategoryTools(categoryCard.dataset.categoryName); 
         if (backToCategoriesBtn) hideCategoryTools();
 
-        // New: Profile Page event handlers
         if (e.target.id === 'profile-save-btn') {
             const birthdayInput = document.getElementById('profile-birthday');
             const notificationsInput = document.getElementById('notification-toggle');
@@ -566,7 +630,9 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Preferences saved!');
         }
         if (e.target.id === 'profile-sign-out-btn') {
-            signOut();
+            if (confirm('Are you sure you want to sign out?')) {
+                signOut();
+            }
         }
 
         if (currentView === 'your-work') {
@@ -594,7 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const storedProfile = localStorage.getItem('toolHubUserProfile');
         if (storedProfile) {
             userProfile = JSON.parse(storedProfile);
-            loadUserPreferences(); // New
+            loadUserPreferences();
             updateUIForLogin();
         }
 
